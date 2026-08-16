@@ -48,7 +48,7 @@ export default async function EventDetail({
           <ChevronLeft className="h-3.5 w-3.5" />
           {accountName ?? "Account"}
         </Link>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">{event.name}</h1>
             <p className="mt-1 font-mono text-xs text-zinc-500">/e/{event.slug}</p>
@@ -67,7 +67,7 @@ export default async function EventDetail({
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard icon={Gauge} label="Quota" value={event.ticket_quota} color="zinc" />
         <StatCard icon={Ticket} label="Issued" value={issuedCount ?? 0} color="emerald" />
         <StatCard icon={ScanLine} label="Checked in" value={checkedInCount ?? 0} color="blue" />

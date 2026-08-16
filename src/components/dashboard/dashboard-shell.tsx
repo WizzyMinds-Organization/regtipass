@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -14,6 +15,8 @@ import {
   LogOut,
   Search,
   Bell,
+  Menu,
+  X,
 } from "lucide-react";
 import { useShell } from "./shell-context";
 import { signOut } from "@/app/login/actions";
@@ -22,7 +25,7 @@ import { LogoMark } from "@/components/logo";
 function Logo() {
   return (
     <Link href="/dashboard" className="flex items-center gap-2 px-1">
-      <LogoMark className="h-8 w-8" />
+      <LogoMark className="h-8 w-8 shrink-0" />
       <span className="text-[15px] font-semibold tracking-tight text-zinc-900">regtipass</span>
     </Link>
   );
@@ -33,22 +36,25 @@ function NavLink({
   label,
   icon: Icon,
   active,
+  onClick,
 }: {
   href: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   active: boolean;
+  onClick?: () => void;
 }) {
   return (
     <Link
       href={href}
+      onClick={onClick}
       className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
         active
           ? "bg-emerald-50 text-emerald-700"
           : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
       }`}
     >
-      <Icon className={`h-4 w-4 ${active ? "text-emerald-600" : "text-zinc-400"}`} />
+      <Icon className={`h-4 w-4 shrink-0 ${active ? "text-emerald-600" : "text-zinc-400"}`} />
       {label}
     </Link>
   );
@@ -71,17 +77,43 @@ export function DashboardShell({
 }) {
   const pathname = usePathname();
   const { eventNav } = useShell();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const insideEvent = eventNav && pathname.includes(`/dashboard/events/${eventNav.eventId}`);
-
   const initials = (userEmail ?? "?").slice(0, 1).toUpperCase();
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
+  const closeMobile = () => setMobileOpen(false);
 
   return (
     <div className="flex min-h-screen bg-zinc-50">
-      <aside className="flex w-64 flex-col border-r border-zinc-200 bg-white px-3 py-4">
-        <Logo />
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/30 lg:hidden"
+          onClick={closeMobile}
+          aria-hidden
+        />
+      )}
 
-        <nav className="mt-6 flex flex-1 flex-col">
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 flex w-72 max-w-[85vw] flex-col border-r border-zinc-200 bg-white px-3 py-4 transition-transform duration-200 lg:static lg:z-auto lg:w-64 lg:max-w-none lg:translate-x-0 ${
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="flex items-center justify-between">
+          <Logo />
+          <button
+            onClick={closeMobile}
+            className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-100 lg:hidden"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <nav className="mt-6 flex flex-1 flex-col overflow-y-auto">
           {insideEvent ? (
             <>
               <Link
@@ -112,6 +144,7 @@ export function DashboardShell({
                   label="Overview"
                   icon={LayoutDashboard}
                   active={pathname === `/dashboard/events/${eventNav.eventId}`}
+                  onClick={closeMobile}
                 />
                 {eventNav.isOwner && (
                   <NavLink
@@ -119,6 +152,7 @@ export function DashboardShell({
                     label="Form"
                     icon={ListChecks}
                     active={pathname.endsWith("/form")}
+                    onClick={closeMobile}
                   />
                 )}
                 {eventNav.isOwner && (
@@ -127,6 +161,7 @@ export function DashboardShell({
                     label="Templates"
                     icon={Palette}
                     active={pathname.includes("/templates")}
+                    onClick={closeMobile}
                   />
                 )}
                 {eventNav.canManageParticipants && (
@@ -135,6 +170,7 @@ export function DashboardShell({
                     label="Issue tickets"
                     icon={Ticket}
                     active={pathname.endsWith("/issue")}
+                    onClick={closeMobile}
                   />
                 )}
                 {eventNav.canCheckin && (
@@ -143,6 +179,7 @@ export function DashboardShell({
                     label="Check-in"
                     icon={ScanLine}
                     active={pathname.endsWith("/checkin")}
+                    onClick={closeMobile}
                   />
                 )}
                 {eventNav.isOwner && (
@@ -151,6 +188,7 @@ export function DashboardShell({
                     label="Staff"
                     icon={Users}
                     active={pathname.endsWith("/staff")}
+                    onClick={closeMobile}
                   />
                 )}
               </div>
@@ -164,6 +202,7 @@ export function DashboardShell({
                   label="Events"
                   icon={CalendarRange}
                   active={pathname === "/dashboard"}
+                  onClick={closeMobile}
                 />
               </div>
             </>
@@ -172,35 +211,43 @@ export function DashboardShell({
 
         <form action={signOut}>
           <button className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900">
-            <LogOut className="h-4 w-4 text-zinc-400" />
+            <LogOut className="h-4 w-4 shrink-0 text-zinc-400" />
             Sign out
           </button>
         </form>
       </aside>
 
-      <div className="flex flex-1 flex-col">
-        <header className="flex h-16 items-center justify-between border-b border-zinc-200 bg-white px-6">
-          <div className="flex items-center gap-2 rounded-lg bg-zinc-100 px-3 py-2 text-sm text-zinc-400 w-72">
-            <Search className="h-4 w-4" />
-            <span>Search…</span>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-zinc-200 bg-white px-4 sm:px-6">
+          <div className="flex min-w-0 items-center gap-3">
+            <button
+              onClick={() => setMobileOpen(true)}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-zinc-500 hover:bg-zinc-100 lg:hidden"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            <div className="hidden items-center gap-2 rounded-lg bg-zinc-100 px-3 py-2 text-sm text-zinc-400 sm:flex sm:w-56 lg:w-72">
+              <Search className="h-4 w-4 shrink-0" />
+              <span className="truncate">Search…</span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <button className="flex h-9 w-9 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-4">
+            <button className="hidden h-9 w-9 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 sm:flex">
               <Bell className="h-4 w-4" />
             </button>
             <div className="flex items-center gap-2.5">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-900 text-xs font-semibold text-white">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-xs font-semibold text-white">
                 {initials}
               </span>
-              <span className="max-w-[160px] truncate text-sm font-medium text-zinc-700">
+              <span className="hidden max-w-[160px] truncate text-sm font-medium text-zinc-700 md:inline">
                 {userEmail}
               </span>
             </div>
           </div>
         </header>
 
-        <main className="flex-1 px-6 py-6">{children}</main>
+        <main className="flex-1 px-4 py-5 sm:px-6 sm:py-6">{children}</main>
       </div>
     </div>
   );

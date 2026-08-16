@@ -47,7 +47,8 @@ export default async function EventOverview({
         <div className="border-b border-zinc-200 px-5 py-4">
           <h3 className="text-sm font-semibold text-zinc-900">Guest list</h3>
         </div>
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[480px] text-sm">
           <thead className="bg-zinc-50 text-left text-zinc-500">
             <tr>
               <th className="px-5 py-2.5 font-medium">Ticket ID</th>
@@ -84,6 +85,7 @@ export default async function EventOverview({
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

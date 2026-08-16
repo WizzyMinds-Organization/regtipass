@@ -1,11 +1,11 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { FormField, Template, TemplateAnchor } from "@/lib/supabase/types";
 import { addAnchor, deleteAnchor, updateAnchor } from "../actions";
 
-const DISPLAY_WIDTH = 640;
+const MAX_DISPLAY_WIDTH = 640;
 
 export function TemplateEditor({
   eventId,
@@ -25,6 +25,8 @@ export function TemplateEditor({
   const router = useRouter();
   const [anchors, setAnchors] = useState(initialAnchors);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [displayWidth, setDisplayWidth] = useState(MAX_DISPLAY_WIDTH);
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const dragState = useRef<{
     id: string;
@@ -34,7 +36,18 @@ export function TemplateEditor({
     origin: { x: number; y: number; width: number; height: number };
   } | null>(null);
 
-  const scale = DISPLAY_WIDTH / template.image_width;
+  useEffect(() => {
+    const el = wrapperRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width;
+      if (width) setDisplayWidth(Math.min(MAX_DISPLAY_WIDTH, width));
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const scale = displayWidth / template.image_width;
   const displayHeight = template.image_height * scale;
 
   const usedFieldKeys = new Set(anchors.filter((a) => a.kind === "field").map((a) => a.field_key));
@@ -130,10 +143,11 @@ export function TemplateEditor({
 
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_280px]">
+      <div ref={wrapperRef} className="w-full" style={{ maxWidth: MAX_DISPLAY_WIDTH }}>
       <div
         ref={containerRef}
-        className="relative select-none overflow-hidden rounded-lg border border-zinc-200 bg-zinc-100"
-        style={{ width: DISPLAY_WIDTH, height: displayHeight }}
+        className="relative select-none overflow-hidden rounded-lg border border-zinc-200 bg-zinc-100 touch-none"
+        style={{ width: displayWidth, height: displayHeight }}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
       >
@@ -171,6 +185,7 @@ export function TemplateEditor({
             )}
           </div>
         ))}
+      </div>
       </div>
 
       <div className="flex flex-col gap-4">

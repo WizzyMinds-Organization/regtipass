@@ -38,7 +38,7 @@ export default async function AccountDetail({
           <ChevronLeft className="h-3.5 w-3.5" />
           All accounts
         </Link>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">{account.name}</h1>
             {account.contact_email && (
@@ -61,7 +61,7 @@ export default async function AccountDetail({
 
       <div className="rounded-2xl border border-zinc-200 bg-white p-5">
         <h2 className="text-sm font-semibold text-zinc-900">New event</h2>
-        <form action={createEvent} className="mt-3 grid grid-cols-2 gap-3">
+        <form action={createEvent} className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <input type="hidden" name="account_id" value={accountId} />
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-zinc-600">Event name</label>
@@ -99,7 +99,7 @@ export default async function AccountDetail({
           </div>
           <button
             type="submit"
-            className="col-span-2 self-start rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+            className="col-span-1 self-start rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 sm:col-span-2"
           >
             Create event
           </button>
@@ -107,7 +107,8 @@ export default async function AccountDetail({
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white">
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[520px] text-sm">
           <thead className="bg-zinc-50 text-left text-zinc-500">
             <tr>
               <th className="px-4 py-2 font-medium">Event</th>
@@ -148,6 +149,7 @@ export default async function AccountDetail({
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

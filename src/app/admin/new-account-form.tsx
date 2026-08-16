@@ -24,7 +24,7 @@ export function NewAccountForm() {
 
       {open && (
         <form action={formAction} className="mt-4 flex flex-col gap-3">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-zinc-600">Organization name</label>
               <input
@@ -57,7 +57,7 @@ export function NewAccountForm() {
           {state.ownerPassword && (
             <div className="rounded-md bg-amber-50 border border-amber-200 p-3 text-sm text-amber-900">
               Account created. Share these credentials with the owner (shown once):
-              <div className="mt-1 font-mono text-xs">
+              <div className="mt-1 break-all font-mono text-xs">
                 {state.ownerEmail} / {state.ownerPassword}
               </div>
             </div>

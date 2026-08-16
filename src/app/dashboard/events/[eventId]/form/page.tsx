@@ -35,52 +35,54 @@ export default async function FormBuilderPage({
       />
 
       <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white">
-        <table className="w-full text-sm">
-          <thead className="bg-zinc-50 text-left text-zinc-500">
-            <tr>
-              <th className="px-4 py-2 font-medium">Label</th>
-              <th className="px-4 py-2 font-medium">Key</th>
-              <th className="px-4 py-2 font-medium">Type</th>
-              <th className="px-4 py-2 font-medium">Required</th>
-              {editable && <th className="px-4 py-2"></th>}
-            </tr>
-          </thead>
-          <tbody>
-            {(fields ?? []).map((f) => (
-              <tr key={f.id} className="border-t border-zinc-100">
-                <td className="px-4 py-2 text-zinc-900">{f.label}</td>
-                <td className="px-4 py-2 font-mono text-xs text-zinc-500">{f.key}</td>
-                <td className="px-4 py-2 text-zinc-600">{f.field_type}</td>
-                <td className="px-4 py-2 text-zinc-600">{f.required ? "Yes" : "No"}</td>
-                {editable && (
-                  <td className="px-4 py-2 text-right">
-                    <form
-                      action={async () => {
-                        "use server";
-                        await deleteFormField(eventId, f.id);
-                      }}
-                    >
-                      <button className="text-xs text-red-600 hover:underline">Remove</button>
-                    </form>
-                  </td>
-                )}
-              </tr>
-            ))}
-            {(fields ?? []).length === 0 && (
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[560px] text-sm">
+            <thead className="bg-zinc-50 text-left text-zinc-500">
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-zinc-400">
-                  No fields yet — add "Name" to get started.
-                </td>
+                <th className="px-4 py-2 font-medium">Label</th>
+                <th className="px-4 py-2 font-medium">Key</th>
+                <th className="px-4 py-2 font-medium">Type</th>
+                <th className="px-4 py-2 font-medium">Required</th>
+                {editable && <th className="px-4 py-2"></th>}
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {(fields ?? []).map((f) => (
+                <tr key={f.id} className="border-t border-zinc-100">
+                  <td className="px-4 py-2 text-zinc-900">{f.label}</td>
+                  <td className="px-4 py-2 font-mono text-xs text-zinc-500">{f.key}</td>
+                  <td className="px-4 py-2 text-zinc-600">{f.field_type}</td>
+                  <td className="px-4 py-2 text-zinc-600">{f.required ? "Yes" : "No"}</td>
+                  {editable && (
+                    <td className="px-4 py-2 text-right">
+                      <form
+                        action={async () => {
+                          "use server";
+                          await deleteFormField(eventId, f.id);
+                        }}
+                      >
+                        <button className="text-xs text-red-600 hover:underline">Remove</button>
+                      </form>
+                    </td>
+                  )}
+                </tr>
+              ))}
+              {(fields ?? []).length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-4 py-8 text-center text-zinc-400">
+                    No fields yet — add "Name" to get started.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {editable && (
         <div className="rounded-2xl border border-zinc-200 bg-white p-5">
           <h2 className="text-sm font-semibold text-zinc-900">Add field</h2>
-          <form action={addField} className="mt-3 grid grid-cols-4 gap-3 items-end">
+          <form action={addField} className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:items-end">
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-zinc-600">Label</label>
               <input
@@ -113,7 +115,7 @@ export default async function FormBuilderPage({
                 className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
               />
             </div>
-            <div className="flex items-center gap-2 pb-2">
+            <div className="flex items-center gap-2 lg:pb-2">
               <input id="required" name="required" type="checkbox" />
               <label htmlFor="required" className="text-sm text-zinc-700">
                 Required
@@ -121,7 +123,7 @@ export default async function FormBuilderPage({
             </div>
             <button
               type="submit"
-              className="col-span-4 self-start rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+              className="col-span-1 self-start rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 sm:col-span-2 lg:col-span-4"
             >
               Add field
             </button>

@@ -38,7 +38,7 @@ export function InviteStaffForm({ eventId }: { eventId: string }) {
         {state.password && (
           <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
             Staff account created. Share these credentials (shown once):
-            <div className="mt-1 font-mono text-xs">
+            <div className="mt-1 break-all font-mono text-xs">
               {state.email} / {state.password}
             </div>
           </div>
