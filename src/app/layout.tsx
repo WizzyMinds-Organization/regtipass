@@ -17,11 +17,11 @@ export const metadata: Metadata = {
   title: "regtipass",
   description: "Event ticketing, issuance, and check-in",
   manifest: "/manifest.json",
-  icons: { icon: "/icons/icon-192.png", apple: "/icons/icon-192.png" },
+  icons: { apple: "/icons/icon-192.png" },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#18181b",
+  themeColor: "#059669",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

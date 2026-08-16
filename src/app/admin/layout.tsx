@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Building2, LogOut, Search, ShieldCheck } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
 import { signOut } from "@/app/login/actions";
+import { LogoMark } from "@/components/logo";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
@@ -15,9 +16,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <div className="flex min-h-screen bg-zinc-50">
       <aside className="flex w-64 flex-col border-r border-zinc-200 bg-white px-3 py-4">
         <Link href="/admin" className="flex items-center gap-2 px-1">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-sm font-bold text-white">
-            R
-          </span>
+          <LogoMark className="h-8 w-8" />
           <span className="text-[15px] font-semibold tracking-tight text-zinc-900">regtipass</span>
         </Link>
 

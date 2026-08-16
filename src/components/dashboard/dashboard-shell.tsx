@@ -17,13 +17,12 @@ import {
 } from "lucide-react";
 import { useShell } from "./shell-context";
 import { signOut } from "@/app/login/actions";
+import { LogoMark } from "@/components/logo";
 
 function Logo() {
   return (
     <Link href="/dashboard" className="flex items-center gap-2 px-1">
-      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-sm font-bold text-white">
-        R
-      </span>
+      <LogoMark className="h-8 w-8" />
       <span className="text-[15px] font-semibold tracking-tight text-zinc-900">regtipass</span>
     </Link>
   );
