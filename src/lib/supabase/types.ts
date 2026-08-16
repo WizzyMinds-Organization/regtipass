@@ -4,6 +4,7 @@ export type FieldType = "text" | "email" | "phone" | "number" | "select";
 export type AnchorKind = "qr" | "ticket_id" | "field";
 export type TicketStatus = "issued" | "checked_in";
 export type CheckInResult = "success" | "already_checked_in" | "invalid";
+export type HandoverRecipientType = "organizer" | "finance" | "vendor" | "other";
 
 export interface Account {
   id: string;
@@ -55,6 +56,7 @@ export interface Template {
   image_path: string;
   image_width: number;
   image_height: number;
+  price: number;
   created_at: string;
 }
 
@@ -83,6 +85,7 @@ export interface Ticket {
   status: TicketStatus;
   checked_in_at: string | null;
   issued_by: string | null;
+  amount_collected: number;
   created_at: string;
 }
 
@@ -99,5 +102,16 @@ export interface CheckIn {
   staff_user_id: string | null;
   device_info: string | null;
   result: CheckInResult;
+  created_at: string;
+}
+
+export interface CashHandover {
+  id: string;
+  event_id: string;
+  staff_user_id: string;
+  amount: number;
+  recipient_type: HandoverRecipientType;
+  recipient_name: string | null;
+  note: string | null;
   created_at: string;
 }

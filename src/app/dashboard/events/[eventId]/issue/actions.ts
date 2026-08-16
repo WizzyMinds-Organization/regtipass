@@ -9,11 +9,15 @@ import { generateTicketId } from "@/lib/slug";
 export async function issueTicket(
   eventId: string,
   templateId: string,
-  data: Record<string, string>
+  data: Record<string, string>,
+  amountCollected: number
 ): Promise<{ error: string | null; ticketId?: string }> {
   const ctx = await getEventContext(eventId);
   if (!ctx || !ctx.canManageParticipants) return { error: "Not authorized." };
   if (ctx.event.status !== "active") return { error: "Event is closed." };
+  if (!Number.isFinite(amountCollected) || amountCollected < 0) {
+    return { error: "Amount collected must be a non-negative number." };
+  }
 
   const supabase = await createClient();
   const user = await getCurrentUser();
@@ -38,6 +42,7 @@ export async function issueTicket(
       template_id: templateId,
       participant_data: cleaned,
       issued_by: user?.id ?? null,
+      amount_collected: amountCollected,
     });
 
     if (!error) {

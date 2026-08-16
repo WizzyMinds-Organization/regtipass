@@ -46,7 +46,10 @@ export default async function TemplatesPage({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={t.url} alt={t.name} className="aspect-[3/2] w-full object-cover" />
             <div className="flex items-center justify-between p-3">
-              <span className="text-sm font-medium text-zinc-900">{t.name}</span>
+              <div>
+                <span className="text-sm font-medium text-zinc-900">{t.name}</span>
+                <p className="text-xs text-zinc-500">{t.price > 0 ? t.price : "Free"}</p>
+              </div>
               {editable && <DeleteTemplateButton eventId={eventId} templateId={t.id} />}
             </div>
           </Link>

@@ -11,9 +11,14 @@ export async function POST(request: NextRequest) {
   const eventId = String(formData.get("event_id") ?? "");
   const name = String(formData.get("name") ?? "").trim();
   const file = formData.get("file");
+  const priceRaw = formData.get("price");
+  const price = priceRaw ? Number(priceRaw) : 0;
 
   if (!eventId || !name || !(file instanceof File)) {
     return NextResponse.json({ error: "Missing fields." }, { status: 400 });
+  }
+  if (!Number.isFinite(price) || price < 0) {
+    return NextResponse.json({ error: "Price must be a non-negative number." }, { status: 400 });
   }
 
   const ctx = await getEventContext(eventId);
@@ -67,6 +72,7 @@ export async function POST(request: NextRequest) {
       image_path: path,
       image_width: width,
       image_height: height,
+      price,
     })
     .select()
     .single();

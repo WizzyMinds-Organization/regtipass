@@ -19,15 +19,22 @@ export function IssueForm({
   const router = useRouter();
   const [templateId, setTemplateId] = useState(templates[0]?.id ?? "");
   const [values, setValues] = useState<Record<string, string>>({});
+  const [amount, setAmount] = useState(templates[0]?.price ?? 0);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [issuedTicketId, setIssuedTicketId] = useState<string | null>(null);
+
+  function onTemplateChange(id: string) {
+    setTemplateId(id);
+    const t = templates.find((t) => t.id === id);
+    if (t) setAmount(t.price);
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setPending(true);
     setError(null);
-    const res = await issueTicket(eventId, templateId, values);
+    const res = await issueTicket(eventId, templateId, values, amount);
     setPending(false);
     if (res.error) {
       setError(res.error);
@@ -62,7 +69,7 @@ export function IssueForm({
           <label className="text-xs font-medium text-zinc-600">Ticket template</label>
           <select
             value={templateId}
-            onChange={(e) => setTemplateId(e.target.value)}
+            onChange={(e) => onTemplateChange(e.target.value)}
             className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
           >
             {templates.map((t) => (
@@ -71,6 +78,18 @@ export function IssueForm({
               </option>
             ))}
           </select>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-zinc-600">Amount collected</label>
+          <input
+            type="number"
+            min={0}
+            step="0.01"
+            value={amount}
+            onChange={(e) => setAmount(Number(e.target.value))}
+            className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
+          />
         </div>
 
         {fields.map((f) => (

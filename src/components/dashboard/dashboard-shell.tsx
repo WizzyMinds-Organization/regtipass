@@ -11,6 +11,7 @@ import {
   Ticket,
   ScanLine,
   Users,
+  Wallet,
   ChevronLeft,
   LogOut,
   Search,
@@ -179,6 +180,15 @@ export function DashboardShell({
                     label="Check-in"
                     icon={ScanLine}
                     active={pathname.endsWith("/checkin")}
+                    onClick={closeMobile}
+                  />
+                )}
+                {eventNav.canManageParticipants && (
+                  <NavLink
+                    href={`/dashboard/events/${eventNav.eventId}/sales`}
+                    label="Sales"
+                    icon={Wallet}
+                    active={pathname.endsWith("/sales")}
                     onClick={closeMobile}
                   />
                 )}

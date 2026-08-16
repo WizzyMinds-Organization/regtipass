@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getEventContext } from "@/lib/event-context";
 import { createClient } from "@/lib/supabase/server";
 import { TemplateEditor } from "./editor";
+import { PriceEditor } from "./price-editor";
 
 export default async function TemplateEditorPage({
   params,
@@ -29,7 +30,15 @@ export default async function TemplateEditorPage({
       <Link href={`/dashboard/events/${eventId}/templates`} className="text-sm text-zinc-500 hover:underline">
         ← Templates
       </Link>
-      <h2 className="text-lg font-semibold text-zinc-900">{template.name}</h2>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-lg font-semibold text-zinc-900">{template.name}</h2>
+        <PriceEditor
+          eventId={eventId}
+          templateId={template.id}
+          initialPrice={template.price}
+          editable={ctx.event.status === "active"}
+        />
+      </div>
       <TemplateEditor
         eventId={eventId}
         template={template}

@@ -12,6 +12,16 @@ async function requireOwner(eventId: string) {
   return ctx;
 }
 
+export async function updateTemplatePrice(eventId: string, templateId: string, price: number) {
+  await requireOwner(eventId);
+  if (!Number.isFinite(price) || price < 0) throw new Error("Price must be a non-negative number.");
+  const supabase = await createClient();
+  const { error } = await supabase.from("templates").update({ price }).eq("id", templateId);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/dashboard/events/${eventId}/templates`);
+  revalidatePath(`/dashboard/events/${eventId}/templates/${templateId}`);
+}
+
 export async function deleteTemplate(eventId: string, templateId: string) {
   await requireOwner(eventId);
   const supabase = await createClient();

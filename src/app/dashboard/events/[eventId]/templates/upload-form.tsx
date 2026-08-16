@@ -44,6 +44,17 @@ export function UploadTemplateForm({ eventId }: { eventId: string }) {
           />
         </div>
         <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-zinc-600">Price (optional)</label>
+          <input
+            name="price"
+            type="number"
+            min={0}
+            step="0.01"
+            defaultValue={0}
+            className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-zinc-600">Artwork (PNG/JPEG/WebP)</label>
           <input
             name="file"
