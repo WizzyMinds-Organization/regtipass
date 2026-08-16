@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getEventContext } from "@/lib/event-context";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { InviteStaffForm } from "./invite-form";
 import { StaffRow } from "./staff-row";
 
@@ -33,14 +34,14 @@ export default async function StaffPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <p className="text-sm text-zinc-500">
-        Check-in staff can only scan and view live counts. Participant staff can add participants
-        and issue tickets. Grant either or both.
-      </p>
+      <PageHeader
+        title="Staff"
+        subtitle="Check-in staff can only scan and view live counts. Participant staff can add participants and issue tickets. Grant either or both."
+      />
 
       <InviteStaffForm eventId={eventId} />
 
-      <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white">
+      <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white">
         <table className="w-full text-sm">
           <thead className="bg-zinc-50 text-left text-zinc-500">
             <tr>

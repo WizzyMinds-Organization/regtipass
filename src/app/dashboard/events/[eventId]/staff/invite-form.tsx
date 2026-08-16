@@ -13,7 +13,7 @@ export function InviteStaffForm({ eventId }: { eventId: string }) {
   const [state, formAction, pending] = useActionState(action, initialState);
 
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-5">
+    <div className="rounded-2xl border border-zinc-200 bg-white p-5">
       <h2 className="text-sm font-semibold text-zinc-900">Invite staff</h2>
       <form action={formAction} className="mt-3 flex flex-col gap-3">
         <div className="flex flex-col gap-1">
@@ -47,7 +47,7 @@ export function InviteStaffForm({ eventId }: { eventId: string }) {
         <button
           type="submit"
           disabled={pending}
-          className="self-start rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
+          className="self-start rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
         >
           {pending ? "Inviting..." : "Invite"}
         </button>

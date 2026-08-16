@@ -175,7 +175,7 @@ export function TemplateEditor({
 
       <div className="flex flex-col gap-4">
         {editable && (
-          <div className="rounded-lg border border-zinc-200 bg-white p-3">
+          <div className="rounded-2xl border border-zinc-200 bg-white p-3">
             <h3 className="text-xs font-semibold text-zinc-900">Add to ticket</h3>
             <div className="mt-2 flex flex-col gap-1.5">
               {!hasQr && (
@@ -210,7 +210,7 @@ export function TemplateEditor({
         )}
 
         {selected && (
-          <div className="rounded-lg border border-zinc-200 bg-white p-3">
+          <div className="rounded-2xl border border-zinc-200 bg-white p-3">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-semibold text-zinc-900">{anchorLabel(selected)}</h3>
               {editable && (

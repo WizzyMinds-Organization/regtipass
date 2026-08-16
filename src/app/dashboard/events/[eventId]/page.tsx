@@ -1,6 +1,9 @@
 import { notFound } from "next/navigation";
+import { Ticket, ScanLine, Gauge } from "lucide-react";
 import { getEventContext } from "@/lib/event-context";
 import { createClient } from "@/lib/supabase/server";
+import { PageHeader } from "@/components/dashboard/page-header";
+import { StatCard } from "@/components/dashboard/stat-card";
 
 export default async function EventOverview({
   params,
@@ -32,29 +35,34 @@ export default async function EventOverview({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-3 gap-4">
-        <Stat label="Issued" value={issued ?? 0} />
-        <Stat label="Checked in" value={checkedIn ?? 0} />
-        <Stat label="Remaining quota" value={remaining} />
+      <PageHeader title={ctx.event.name} subtitle="Live ticket counts and the full guest list." />
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <StatCard icon={Ticket} label="Issued" value={issued ?? 0} color="emerald" />
+        <StatCard icon={ScanLine} label="Checked in" value={checkedIn ?? 0} color="blue" />
+        <StatCard icon={Gauge} label="Remaining quota" value={remaining} color="amber" />
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white">
+      <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white">
+        <div className="border-b border-zinc-200 px-5 py-4">
+          <h3 className="text-sm font-semibold text-zinc-900">Guest list</h3>
+        </div>
         <table className="w-full text-sm">
           <thead className="bg-zinc-50 text-left text-zinc-500">
             <tr>
-              <th className="px-4 py-2 font-medium">Ticket ID</th>
-              <th className="px-4 py-2 font-medium">Participant</th>
-              <th className="px-4 py-2 font-medium">Status</th>
+              <th className="px-5 py-2.5 font-medium">Ticket ID</th>
+              <th className="px-5 py-2.5 font-medium">Participant</th>
+              <th className="px-5 py-2.5 font-medium">Status</th>
             </tr>
           </thead>
           <tbody>
             {(tickets ?? []).map((t) => (
               <tr key={t.id} className="border-t border-zinc-100">
-                <td className="px-4 py-2 font-mono text-xs text-zinc-500">{t.id}</td>
-                <td className="px-4 py-2 text-zinc-900">
+                <td className="px-5 py-2.5 font-mono text-xs text-zinc-500">{t.id}</td>
+                <td className="px-5 py-2.5 text-zinc-900">
                   {(t.participant_data as Record<string, string>)?.name ?? "—"}
                 </td>
-                <td className="px-4 py-2">
+                <td className="px-5 py-2.5">
                   <span
                     className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                       t.status === "checked_in"
@@ -69,7 +77,7 @@ export default async function EventOverview({
             ))}
             {(tickets ?? []).length === 0 && (
               <tr>
-                <td colSpan={3} className="px-4 py-8 text-center text-zinc-400">
+                <td colSpan={3} className="px-5 py-10 text-center text-zinc-400">
                   No tickets issued yet.
                 </td>
               </tr>
@@ -77,15 +85,6 @@ export default async function EventOverview({
           </tbody>
         </table>
       </div>
-    </div>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-4">
-      <div className="text-xs font-medium text-zinc-500">{label}</div>
-      <div className="mt-1 text-2xl font-semibold text-zinc-900">{value}</div>
     </div>
   );
 }

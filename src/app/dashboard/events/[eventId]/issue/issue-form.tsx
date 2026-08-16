@@ -57,7 +57,7 @@ export function IssueForm({
 
   return (
     <div className="grid gap-6 sm:grid-cols-2">
-      <form onSubmit={onSubmit} className="flex flex-col gap-3 rounded-lg border border-zinc-200 bg-white p-5">
+      <form onSubmit={onSubmit} className="flex flex-col gap-3 rounded-2xl border border-zinc-200 bg-white p-5">
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-zinc-600">Ticket template</label>
           <select
@@ -110,13 +110,13 @@ export function IssueForm({
         <button
           type="submit"
           disabled={pending}
-          className="mt-2 self-start rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
+          className="mt-2 self-start rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
         >
           {pending ? "Issuing..." : "Issue ticket"}
         </button>
       </form>
 
-      <div className="rounded-lg border border-zinc-200 bg-white p-5">
+      <div className="rounded-2xl border border-zinc-200 bg-white p-5">
         <h3 className="text-sm font-semibold text-zinc-900">Ticket preview</h3>
         {issuedTicketId ? (
           <div className="mt-3 flex flex-col gap-3">
@@ -130,7 +130,7 @@ export function IssueForm({
             <div className="flex gap-2">
               <button
                 onClick={() => share(issuedTicketId)}
-                className="flex-1 rounded-md bg-zinc-900 px-3 py-2 text-sm font-medium text-white hover:bg-zinc-700"
+                className="flex-1 rounded-md bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700"
               >
                 Share
               </button>

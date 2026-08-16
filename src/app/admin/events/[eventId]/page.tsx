@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ChevronLeft, Gauge, ScanLine, Ticket } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { closeEvent, reopenEvent } from "@/app/admin/actions";
+import { StatCard } from "@/components/dashboard/stat-card";
 
 export default async function EventDetail({
   params,
@@ -39,40 +41,37 @@ export default async function EventDetail({
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
       <div>
-        <Link href={`/admin/accounts/${event.account_id}`} className="text-sm text-zinc-500 hover:underline">
-          ← {accountName ?? "Account"}
+        <Link
+          href={`/admin/accounts/${event.account_id}`}
+          className="mb-2 inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900"
+        >
+          <ChevronLeft className="h-3.5 w-3.5" />
+          {accountName ?? "Account"}
         </Link>
-        <div className="mt-2 flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-zinc-900">{event.name}</h1>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">{event.name}</h1>
+            <p className="mt-1 font-mono text-xs text-zinc-500">/e/{event.slug}</p>
+          </div>
           <form action={toggle}>
             <button
-              className={`rounded-md px-3 py-1.5 text-sm font-medium ${
+              className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
                 event.status === "active"
                   ? "bg-red-50 text-red-700 hover:bg-red-100"
-                  : "bg-green-50 text-green-700 hover:bg-green-100"
+                  : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
               }`}
             >
               {event.status === "active" ? "Close event" : "Reopen event"}
             </button>
           </form>
         </div>
-        <p className="mt-1 font-mono text-xs text-zinc-500">/e/{event.slug}</p>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
-        <Stat label="Quota" value={event.ticket_quota} />
-        <Stat label="Issued" value={issuedCount ?? 0} />
-        <Stat label="Checked in" value={checkedInCount ?? 0} />
+        <StatCard icon={Gauge} label="Quota" value={event.ticket_quota} color="zinc" />
+        <StatCard icon={Ticket} label="Issued" value={issuedCount ?? 0} color="emerald" />
+        <StatCard icon={ScanLine} label="Checked in" value={checkedInCount ?? 0} color="blue" />
       </div>
-    </div>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-4">
-      <div className="text-xs font-medium text-zinc-500">{label}</div>
-      <div className="mt-1 text-2xl font-semibold text-zinc-900">{value}</div>
     </div>
   );
 }

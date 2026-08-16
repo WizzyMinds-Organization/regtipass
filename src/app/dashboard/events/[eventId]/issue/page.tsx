@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getEventContext } from "@/lib/event-context";
 import { createClient } from "@/lib/supabase/server";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { IssueForm } from "./issue-form";
 
 export default async function IssuePage({
@@ -22,22 +23,29 @@ export default async function IssuePage({
   const remaining = ctx.event.ticket_quota - (issued ?? 0);
 
   if (ctx.event.status !== "active") {
-    return <p className="text-zinc-500">This event is closed — ticket issuance is disabled.</p>;
+    return (
+      <div className="flex flex-col gap-6">
+        <PageHeader title="Issue tickets" />
+        <p className="text-zinc-500">This event is closed — ticket issuance is disabled.</p>
+      </div>
+    );
   }
 
   if ((templates ?? []).length === 0) {
     return (
-      <p className="text-zinc-500">
-        No ticket templates yet. An account owner needs to design one first.
-      </p>
+      <div className="flex flex-col gap-6">
+        <PageHeader title="Issue tickets" />
+        <p className="text-zinc-500">No ticket templates yet. An account owner needs to design one first.</p>
+      </div>
     );
   }
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-sm text-zinc-500">
-        {remaining} of {ctx.event.ticket_quota} tickets remaining.
-      </p>
+      <PageHeader
+        title="Issue tickets"
+        subtitle={`${remaining} of ${ctx.event.ticket_quota} tickets remaining.`}
+      />
       <IssueForm eventId={eventId} fields={fields ?? []} templates={templates ?? []} remaining={remaining} />
     </div>
   );

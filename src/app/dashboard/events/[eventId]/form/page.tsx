@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getEventContext } from "@/lib/event-context";
 import { createClient } from "@/lib/supabase/server";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { addFormField, deleteFormField } from "./actions";
 
 export default async function FormBuilderPage({
@@ -28,11 +29,12 @@ export default async function FormBuilderPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <p className="text-sm text-zinc-500">
-        Define which fields to collect for each participant before designing any ticket templates.
-      </p>
+      <PageHeader
+        title="Participant form"
+        subtitle="Define which fields to collect for each participant before designing any ticket templates."
+      />
 
-      <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white">
+      <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white">
         <table className="w-full text-sm">
           <thead className="bg-zinc-50 text-left text-zinc-500">
             <tr>
@@ -76,7 +78,7 @@ export default async function FormBuilderPage({
       </div>
 
       {editable && (
-        <div className="rounded-lg border border-zinc-200 bg-white p-5">
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5">
           <h2 className="text-sm font-semibold text-zinc-900">Add field</h2>
           <form action={addField} className="mt-3 grid grid-cols-4 gap-3 items-end">
             <div className="flex flex-col gap-1">
@@ -85,14 +87,14 @@ export default async function FormBuilderPage({
                 name="label"
                 required
                 placeholder="e.g. Full name"
-                className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-900"
+                className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
               />
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-zinc-600">Type</label>
               <select
                 name="field_type"
-                className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-900"
+                className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
               >
                 <option value="text">Text</option>
                 <option value="email">Email</option>
@@ -108,7 +110,7 @@ export default async function FormBuilderPage({
               <input
                 name="options"
                 placeholder="VIP, General"
-                className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-900"
+                className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
               />
             </div>
             <div className="flex items-center gap-2 pb-2">
@@ -119,7 +121,7 @@ export default async function FormBuilderPage({
             </div>
             <button
               type="submit"
-              className="col-span-4 self-start rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700"
+              className="col-span-4 self-start rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
             >
               Add field
             </button>

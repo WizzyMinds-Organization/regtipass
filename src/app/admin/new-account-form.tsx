@@ -14,7 +14,7 @@ export function NewAccountForm() {
   const [state, formAction, pending] = useActionState(createAccount, initialState);
 
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-5">
+    <div className="rounded-2xl border border-zinc-200 bg-white p-5">
       <button
         onClick={() => setOpen((o) => !o)}
         className="text-sm font-medium text-zinc-900"
@@ -30,7 +30,7 @@ export function NewAccountForm() {
               <input
                 name="name"
                 required
-                className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-900"
+                className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
               />
             </div>
             <div className="flex flex-col gap-1">
@@ -38,7 +38,7 @@ export function NewAccountForm() {
               <input
                 name="contact_email"
                 type="email"
-                className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-900"
+                className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
               />
             </div>
           </div>
@@ -48,7 +48,7 @@ export function NewAccountForm() {
               name="owner_email"
               type="email"
               required
-              className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-900"
+              className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
             />
           </div>
 
@@ -66,7 +66,7 @@ export function NewAccountForm() {
           <button
             type="submit"
             disabled={pending}
-            className="self-start rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
+            className="self-start rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
           >
             {pending ? "Creating..." : "Create account"}
           </button>

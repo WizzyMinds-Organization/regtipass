@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getEventContext } from "@/lib/event-context";
 import { createClient } from "@/lib/supabase/server";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { UploadTemplateForm } from "./upload-form";
 import { DeleteTemplateButton } from "./delete-button";
 
@@ -30,17 +31,17 @@ export default async function TemplatesPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <p className="text-sm text-zinc-500">
-        Upload artwork for each ticket tier, then place the QR code, printed ticket ID, and
-        participant field anchors on top of it.
-      </p>
+      <PageHeader
+        title="Ticket templates"
+        subtitle="Upload artwork for each ticket tier, then place the QR code, printed ticket ID, and participant field anchors on top of it."
+      />
 
       <div className="grid gap-4 sm:grid-cols-3">
         {withUrls.map((t) => (
           <Link
             key={t.id}
             href={`/dashboard/events/${eventId}/templates/${t.id}`}
-            className="group overflow-hidden rounded-lg border border-zinc-200 bg-white hover:border-zinc-400"
+            className="group overflow-hidden rounded-2xl border border-zinc-200 bg-white hover:border-zinc-400"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={t.url} alt={t.name} className="aspect-[3/2] w-full object-cover" />

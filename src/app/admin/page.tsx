@@ -1,5 +1,8 @@
 import Link from "next/link";
+import { Building2, CalendarRange, CheckCircle2, ShieldAlert } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { PageHeader } from "@/components/dashboard/page-header";
+import { StatCard } from "@/components/dashboard/stat-card";
 import { NewAccountForm } from "./new-account-form";
 
 export default async function AdminHome() {
@@ -19,18 +22,28 @@ export default async function AdminHome() {
     counts.set(e.account_id, c);
   }
 
+  const totalAccounts = accounts?.length ?? 0;
+  const suspended = (accounts ?? []).filter((a) => a.status === "suspended").length;
+  const totalEvents = eventCounts?.length ?? 0;
+  const activeEvents = (eventCounts ?? []).filter((e) => e.status === "active").length;
+
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-8">
-      <div>
-        <h1 className="text-2xl font-semibold text-zinc-900">Organizer accounts</h1>
-        <p className="mt-1 text-sm text-zinc-500">
-          Create accounts, set event quotas, and manage the platform.
-        </p>
+    <div className="mx-auto flex max-w-5xl flex-col gap-8">
+      <PageHeader
+        title="Organizer accounts"
+        subtitle="Create accounts, set event quotas, and manage the platform."
+      />
+
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <StatCard icon={Building2} label="Accounts" value={totalAccounts} color="zinc" />
+        <StatCard icon={ShieldAlert} label="Suspended" value={suspended} color="amber" />
+        <StatCard icon={CalendarRange} label="Total events" value={totalEvents} color="blue" />
+        <StatCard icon={CheckCircle2} label="Active events" value={activeEvents} color="emerald" />
       </div>
 
       <NewAccountForm />
 
-      <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white">
+      <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white">
         <table className="w-full text-sm">
           <thead className="bg-zinc-50 text-left text-zinc-500">
             <tr>
@@ -55,7 +68,7 @@ export default async function AdminHome() {
                   <span
                     className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                       a.status === "active"
-                        ? "bg-green-100 text-green-700"
+                        ? "bg-emerald-100 text-emerald-700"
                         : "bg-red-100 text-red-700"
                     }`}
                   >
