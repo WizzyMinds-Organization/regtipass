@@ -1,7 +1,7 @@
 import type { ComponentType } from "react";
 
 const COLOR_MAP = {
-  emerald: "bg-emerald-50 text-emerald-600",
+  orange: "bg-orange-50 text-orange-600",
   blue: "bg-blue-50 text-blue-600",
   amber: "bg-amber-50 text-amber-600",
   zinc: "bg-zinc-100 text-zinc-600",

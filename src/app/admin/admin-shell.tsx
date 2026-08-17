@@ -2,9 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Building2, LogOut, Menu, Search, ShieldCheck, X } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Building2, LayoutDashboard, LogOut, Menu, Search, ShieldCheck, X } from "lucide-react";
 import { signOut } from "@/app/login/actions";
 import { LogoMark } from "@/components/logo";
+
+const navItems = [
+  { href: "/admin", label: "Overview", icon: LayoutDashboard },
+  { href: "/admin/organizations", label: "Organizations", icon: Building2 },
+];
 
 export function AdminShell({
   children,
@@ -14,6 +20,7 @@ export function AdminShell({
   userEmail: string | null;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
   const initials = (userEmail ?? "?").slice(0, 1).toUpperCase();
 
   return (
@@ -48,14 +55,24 @@ export function AdminShell({
           <div className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
             Platform
           </div>
-          <Link
-            href="/admin"
-            onClick={() => setMobileOpen(false)}
-            className="flex items-center gap-2.5 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700"
-          >
-            <Building2 className="h-4 w-4 shrink-0 text-emerald-600" />
-            Accounts
-          </Link>
+          {navItems.map(({ href, label, icon: Icon }) => {
+            const active = href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                onClick={() => setMobileOpen(false)}
+                className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium ${
+                  active
+                    ? "bg-orange-50 text-orange-700"
+                    : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                }`}
+              >
+                <Icon className={`h-4 w-4 shrink-0 ${active ? "text-orange-600" : "text-zinc-400"}`} />
+                {label}
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="mb-2 flex items-center gap-2 rounded-lg bg-zinc-50 px-3 py-2 text-xs font-medium text-zinc-500">

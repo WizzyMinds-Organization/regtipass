@@ -2,7 +2,8 @@ import { notFound } from "next/navigation";
 import { getEventContext } from "@/lib/event-context";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/dashboard/page-header";
-import { addFormField, deleteFormField } from "./actions";
+import { deleteFormField } from "./actions";
+import { AddFieldModal } from "./add-field-modal";
 
 export default async function FormBuilderPage({
   params,
@@ -20,11 +21,6 @@ export default async function FormBuilderPage({
     .eq("event_id", eventId)
     .order("sort_order");
 
-  const addField = async (formData: FormData) => {
-    "use server";
-    await addFormField(eventId, formData);
-  };
-
   const editable = ctx.event.status === "active";
 
   return (
@@ -32,6 +28,7 @@ export default async function FormBuilderPage({
       <PageHeader
         title="Participant form"
         subtitle="Define which fields to collect for each participant before designing any ticket templates."
+        action={editable && <AddFieldModal eventId={eventId} />}
       />
 
       <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white">
@@ -70,7 +67,7 @@ export default async function FormBuilderPage({
               {(fields ?? []).length === 0 && (
                 <tr>
                   <td colSpan={5} className="px-4 py-8 text-center text-zinc-400">
-                    No fields yet — add "Name" to get started.
+                    No fields yet — add &quot;Name&quot; to get started.
                   </td>
                 </tr>
               )}
@@ -78,58 +75,6 @@ export default async function FormBuilderPage({
           </table>
         </div>
       </div>
-
-      {editable && (
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5">
-          <h2 className="text-sm font-semibold text-zinc-900">Add field</h2>
-          <form action={addField} className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:items-end">
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-zinc-600">Label</label>
-              <input
-                name="label"
-                required
-                placeholder="e.g. Full name"
-                className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-zinc-600">Type</label>
-              <select
-                name="field_type"
-                className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
-              >
-                <option value="text">Text</option>
-                <option value="email">Email</option>
-                <option value="phone">Phone</option>
-                <option value="number">Number</option>
-                <option value="select">Single select</option>
-              </select>
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-zinc-600">
-                Options (comma-separated, for select)
-              </label>
-              <input
-                name="options"
-                placeholder="VIP, General"
-                className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
-              />
-            </div>
-            <div className="flex items-center gap-2 lg:pb-2">
-              <input id="required" name="required" type="checkbox" />
-              <label htmlFor="required" className="text-sm text-zinc-700">
-                Required
-              </label>
-            </div>
-            <button
-              type="submit"
-              className="col-span-1 self-start rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 sm:col-span-2 lg:col-span-4"
-            >
-              Add field
-            </button>
-          </form>
-        </div>
-      )}
     </div>
   );
 }

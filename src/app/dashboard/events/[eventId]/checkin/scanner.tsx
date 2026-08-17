@@ -97,7 +97,7 @@ export function CheckinScanner({ eventId }: { eventId: string }) {
             placeholder="Type ticket ID"
             className="flex-1 rounded-md border border-zinc-300 px-3 py-2 text-sm font-mono"
           />
-          <button className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">
+          <button className="rounded-md bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700">
             Check in
           </button>
         </form>
@@ -120,7 +120,7 @@ export function CheckinScanner({ eventId }: { eventId: string }) {
           <div
             className={`rounded-lg border p-4 ${
               lastResult.result === "success"
-                ? "border-emerald-200 bg-emerald-50"
+                ? "border-orange-200 bg-orange-50"
                 : lastResult.result === "already_checked_in"
                 ? "border-amber-200 bg-amber-50"
                 : "border-red-200 bg-red-50"

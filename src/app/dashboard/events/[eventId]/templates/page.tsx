@@ -34,6 +34,7 @@ export default async function TemplatesPage({
       <PageHeader
         title="Ticket templates"
         subtitle="Upload artwork for each ticket tier, then place the QR code, printed ticket ID, and participant field anchors on top of it."
+        action={editable && <UploadTemplateForm eventId={eventId} />}
       />
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -55,8 +56,6 @@ export default async function TemplatesPage({
           </Link>
         ))}
       </div>
-
-      {editable && <UploadTemplateForm eventId={eventId} />}
     </div>
   );
 }

@@ -32,18 +32,17 @@ export async function createAccount(
   await requireSuperAdmin();
 
   const name = String(formData.get("name") ?? "").trim();
-  const contactEmail = String(formData.get("contact_email") ?? "").trim();
   const ownerEmail = String(formData.get("owner_email") ?? "").trim();
 
   if (!name || !ownerEmail) {
-    return { error: "Organization name and owner email are required." };
+    return { error: "Organization name and email are required." };
   }
 
   const admin = createAdminClient();
 
   const { data: account, error: accountError } = await admin
     .from("accounts")
-    .insert({ name, contact_email: contactEmail || null })
+    .insert({ name, contact_email: ownerEmail })
     .select()
     .single();
 
@@ -76,7 +75,36 @@ export async function createAccount(
   }
 
   revalidatePath("/admin");
+  revalidatePath("/admin/organizations");
   return { error: null, ownerPassword: password, ownerEmail };
+}
+
+export async function resetOwnerPassword(
+  accountId: string
+): Promise<{ error: string | null; password?: string; email?: string }> {
+  await requireSuperAdmin();
+
+  const admin = createAdminClient();
+  const { data: owner } = await admin
+    .from("account_users")
+    .select("user_id")
+    .eq("account_id", accountId)
+    .eq("is_owner", true)
+    .maybeSingle();
+
+  if (!owner) return { error: "Owner not found." };
+
+  const password = randomPassword();
+  const { error } = await admin.auth.admin.updateUserById(owner.user_id, { password });
+  if (error) return { error: error.message };
+
+  const { data: directoryRow } = await admin
+    .from("user_directory")
+    .select("email")
+    .eq("user_id", owner.user_id)
+    .maybeSingle();
+
+  return { error: null, password, email: directoryRow?.email };
 }
 
 export async function createEvent(formData: FormData) {
@@ -116,6 +144,7 @@ export async function setAccountStatus(accountId: string, status: "active" | "su
   if (error) throw new Error(error.message);
   revalidatePath(`/admin/accounts/${accountId}`);
   revalidatePath("/admin");
+  revalidatePath("/admin/organizations");
 }
 
 export async function closeEvent(eventId: string) {

@@ -50,7 +50,7 @@ export default async function EventOverview({
       <PageHeader title={ctx.event.name} subtitle="Live ticket counts and the full guest list." />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatCard icon={Ticket} label="Issued" value={issued ?? 0} color="emerald" />
+        <StatCard icon={Ticket} label="Issued" value={issued ?? 0} color="orange" />
         <StatCard icon={ScanLine} label="Checked in" value={checkedIn ?? 0} color="blue" />
         <StatCard icon={Gauge} label="Remaining quota" value={remaining} color="amber" />
       </div>

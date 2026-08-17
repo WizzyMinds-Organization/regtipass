@@ -35,7 +35,7 @@ export default async function DashboardHome() {
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <StatCard icon={CalendarRange} label="Total events" value={total} color="zinc" />
-        <StatCard icon={CheckCircle2} label="Active" value={active} color="emerald" />
+        <StatCard icon={CheckCircle2} label="Active" value={active} color="orange" />
         <StatCard icon={PauseCircle} label="Closed" value={closed} color="blue" />
         <StatCard icon={Ticket} label="Tickets issued" value={totalIssued} color="amber" />
       </div>
@@ -51,23 +51,23 @@ export default async function DashboardHome() {
                 <Link
                   key={e.id}
                   href={`/dashboard/events/${e.id}`}
-                  className="group rounded-2xl border border-zinc-200 bg-white p-5 transition-colors hover:border-emerald-300"
+                  className="group rounded-2xl border border-zinc-200 bg-white p-5 transition-colors hover:border-orange-300"
                 >
                   <div className="flex items-start justify-between">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
                       <CalendarRange className="h-5 w-5" />
                     </span>
                     <span
                       className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                         e.status === "active"
-                          ? "bg-emerald-100 text-emerald-700"
+                          ? "bg-orange-100 text-orange-700"
                           : "bg-zinc-200 text-zinc-600"
                       }`}
                     >
                       {e.status}
                     </span>
                   </div>
-                  <p className="mt-4 font-semibold text-zinc-900 group-hover:text-emerald-700">
+                  <p className="mt-4 font-semibold text-zinc-900 group-hover:text-orange-700">
                     {e.name}
                   </p>
                   <p className="mt-0.5 font-mono text-xs text-zinc-400">/e/{e.slug}</p>
@@ -81,7 +81,7 @@ export default async function DashboardHome() {
                     </div>
                     <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-zinc-100">
                       <div
-                        className="h-full rounded-full bg-emerald-500"
+                        className="h-full rounded-full bg-orange-500"
                         style={{ width: `${pct}%` }}
                       />
                     </div>

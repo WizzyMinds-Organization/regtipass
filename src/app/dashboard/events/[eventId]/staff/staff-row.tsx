@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { removeStaff, updateStaffPermissions } from "./actions";
+import { ResetPasswordButton } from "./reset-password-button";
 
 export function StaffRow({
   eventId,
@@ -42,16 +43,19 @@ export function StaffRow({
         />
       </td>
       <td className="px-4 py-2 text-right">
-        <button
-          className="text-xs text-red-600 hover:underline"
-          onClick={async () => {
-            if (!confirm("Remove this staff member?")) return;
-            await removeStaff(eventId, accountUserId);
-            router.refresh();
-          }}
-        >
-          Remove
-        </button>
+        <div className="flex items-center justify-end gap-3">
+          <ResetPasswordButton eventId={eventId} accountUserId={accountUserId} />
+          <button
+            className="text-xs text-red-600 hover:underline"
+            onClick={async () => {
+              if (!confirm("Remove this staff member?")) return;
+              await removeStaff(eventId, accountUserId);
+              router.refresh();
+            }}
+          >
+            Remove
+          </button>
+        </div>
       </td>
     </tr>
   );

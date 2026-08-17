@@ -37,9 +37,8 @@ export default async function StaffPage({
       <PageHeader
         title="Staff"
         subtitle="Check-in staff can only scan and view live counts. Participant staff can add participants and issue tickets. Grant either or both."
+        action={<InviteStaffForm eventId={eventId} />}
       />
-
-      <InviteStaffForm eventId={eventId} />
 
       <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white">
         <div className="overflow-x-auto">

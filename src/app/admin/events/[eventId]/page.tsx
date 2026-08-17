@@ -58,7 +58,7 @@ export default async function EventDetail({
               className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
                 event.status === "active"
                   ? "bg-red-50 text-red-700 hover:bg-red-100"
-                  : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                  : "bg-orange-50 text-orange-700 hover:bg-orange-100"
               }`}
             >
               {event.status === "active" ? "Close event" : "Reopen event"}
@@ -69,7 +69,7 @@ export default async function EventDetail({
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard icon={Gauge} label="Quota" value={event.ticket_quota} color="zinc" />
-        <StatCard icon={Ticket} label="Issued" value={issuedCount ?? 0} color="emerald" />
+        <StatCard icon={Ticket} label="Issued" value={issuedCount ?? 0} color="orange" />
         <StatCard icon={ScanLine} label="Checked in" value={checkedInCount ?? 0} color="blue" />
       </div>
     </div>

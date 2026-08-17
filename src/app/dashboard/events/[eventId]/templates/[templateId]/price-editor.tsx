@@ -49,7 +49,7 @@ export function PriceEditor({
         <button
           onClick={save}
           disabled={saving}
-          className="rounded-md bg-emerald-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+          className="rounded-md bg-orange-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-orange-700 disabled:opacity-50"
         >
           {saving ? "Saving…" : "Save"}
         </button>

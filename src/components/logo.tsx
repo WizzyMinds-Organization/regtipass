@@ -7,23 +7,23 @@
 export function LogoMark({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
-      <rect width="32" height="32" rx="8" fill="#059669" />
+      <rect width="32" height="32" rx="8" fill="#ea580c" />
       <rect x="4" y="9" width="24" height="14" rx="2" fill="#ffffff" />
-      <circle cx="4" cy="16" r="2.6" fill="#059669" />
-      <circle cx="28" cy="16" r="2.6" fill="#059669" />
+      <circle cx="4" cy="16" r="2.6" fill="#ea580c" />
+      <circle cx="28" cy="16" r="2.6" fill="#ea580c" />
       <line
         x1="19"
         y1="10.5"
         x2="19"
         y2="21.5"
-        stroke="#059669"
+        stroke="#ea580c"
         strokeWidth="1.4"
         strokeDasharray="2 2.2"
         strokeLinecap="round"
       />
       <path
         d="M21.3 16.4l1.8 1.8l3.6-4"
-        stroke="#059669"
+        stroke="#ea580c"
         strokeWidth="1.8"
         strokeLinecap="round"
         strokeLinejoin="round"

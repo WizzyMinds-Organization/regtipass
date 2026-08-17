@@ -2,24 +2,24 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { Plus, X } from "lucide-react";
-import { inviteStaff } from "./actions";
+import { createAccount } from "@/app/admin/actions";
 
-function InviteStaffFormBody({ eventId, onDone }: { eventId: string; onDone: () => void }) {
-  const action = inviteStaff.bind(null, eventId);
-  const initialState: Awaited<ReturnType<typeof action>> = {
-    error: null,
-    password: undefined,
-    email: undefined,
-  };
-  const [state, formAction, pending] = useActionState(action, initialState);
+const initialState: Awaited<ReturnType<typeof createAccount>> = {
+  error: null,
+  ownerPassword: undefined,
+  ownerEmail: undefined,
+};
 
-  if (state.password) {
+function NewAccountFormBody({ onDone }: { onDone: () => void }) {
+  const [state, formAction, pending] = useActionState(createAccount, initialState);
+
+  if (state.ownerPassword) {
     return (
       <div className="mt-4 flex flex-col gap-3">
         <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-          Staff account created. Share these credentials (shown once):
+          Account created. Share these credentials with the owner (shown once):
           <div className="mt-1 break-all font-mono text-xs">
-            {state.email} / {state.password}
+            {state.ownerEmail} / {state.ownerPassword}
           </div>
         </div>
         <button
@@ -35,21 +35,21 @@ function InviteStaffFormBody({ eventId, onDone }: { eventId: string; onDone: () 
   return (
     <form action={formAction} className="mt-4 flex flex-col gap-3">
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-zinc-600">Email</label>
+        <label className="text-xs font-medium text-zinc-600">Organization name</label>
         <input
-          name="email"
-          type="email"
+          name="name"
           required
           className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-orange-500"
         />
       </div>
-      <div className="flex gap-4">
-        <label className="flex items-center gap-2 text-sm text-zinc-700">
-          <input name="can_checkin" type="checkbox" /> Check-in staff
-        </label>
-        <label className="flex items-center gap-2 text-sm text-zinc-700">
-          <input name="can_manage_participants" type="checkbox" /> Participant staff
-        </label>
+      <div className="flex flex-col gap-1">
+        <label className="text-xs font-medium text-zinc-600">Email</label>
+        <input
+          name="owner_email"
+          type="email"
+          required
+          className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-orange-500"
+        />
       </div>
 
       {state.error && <p className="text-sm text-red-600">{state.error}</p>}
@@ -59,13 +59,13 @@ function InviteStaffFormBody({ eventId, onDone }: { eventId: string; onDone: () 
         disabled={pending}
         className="mt-1 self-start rounded-md bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 disabled:opacity-50"
       >
-        {pending ? "Inviting..." : "Invite"}
+        {pending ? "Creating..." : "Create organization"}
       </button>
     </form>
   );
 }
 
-export function InviteStaffForm({ eventId }: { eventId: string }) {
+export function NewAccountModal() {
   const [open, setOpen] = useState(false);
   const [formKey, setFormKey] = useState(0);
 
@@ -90,7 +90,7 @@ export function InviteStaffForm({ eventId }: { eventId: string }) {
         className="inline-flex items-center gap-1.5 rounded-md bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700"
       >
         <Plus className="h-4 w-4" />
-        Invite staff
+        New organization
       </button>
 
       {open && (
@@ -98,7 +98,7 @@ export function InviteStaffForm({ eventId }: { eventId: string }) {
           <div className="absolute inset-0 bg-black/30" onClick={close} aria-hidden />
           <div className="relative w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-5 shadow-xl">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-zinc-900">Invite staff</h2>
+              <h2 className="text-sm font-semibold text-zinc-900">New organization</h2>
               <button
                 onClick={close}
                 className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700"
@@ -107,7 +107,7 @@ export function InviteStaffForm({ eventId }: { eventId: string }) {
               </button>
             </div>
 
-            <InviteStaffFormBody key={formKey} eventId={eventId} onDone={close} />
+            <NewAccountFormBody key={formKey} onDone={close} />
           </div>
         </div>
       )}

@@ -96,7 +96,7 @@ export default async function SalesPage({
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatCard icon={Ticket} label={ctx.isOwner ? "Tickets sold" : "Your tickets sold"} value={totalTickets} color="emerald" />
+        <StatCard icon={Ticket} label={ctx.isOwner ? "Tickets sold" : "Your tickets sold"} value={totalTickets} color="orange" />
         <StatCard icon={Wallet} label={ctx.isOwner ? "Total collected" : "You collected"} value={totalSold.toFixed(2)} color="blue" />
         <StatCard icon={HandCoins} label={ctx.isOwner ? "Total handed over" : "You handed over"} value={totalHandedOver.toFixed(2)} color="amber" />
       </div>
@@ -130,7 +130,7 @@ export default async function SalesPage({
                       className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                         r.balance > 0
                           ? "bg-amber-100 text-amber-700"
-                          : "bg-emerald-100 text-emerald-700"
+                          : "bg-orange-100 text-orange-700"
                       }`}
                     >
                       {r.balance.toFixed(2)}
@@ -150,20 +150,19 @@ export default async function SalesPage({
         </div>
       </div>
 
-      {editable && (
-        <HandoverForm
-          eventId={eventId}
-          isOwner={ctx.isOwner}
-          staffOptions={sellers.map((m) => ({ userId: m.user_id, email: emailById.get(m.user_id) ?? m.user_id }))}
-        />
-      )}
-
       <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white">
-        <div className="border-b border-zinc-200 px-5 py-4">
+        <div className="flex items-center justify-between border-b border-zinc-200 px-5 py-4">
           <h3 className="text-sm font-semibold text-zinc-900">
             <Banknote className="mr-1.5 inline h-4 w-4 text-zinc-400" />
             Handover log
           </h3>
+          {editable && (
+            <HandoverForm
+              eventId={eventId}
+              isOwner={ctx.isOwner}
+              staffOptions={sellers.map((m) => ({ userId: m.user_id, email: emailById.get(m.user_id) ?? m.user_id }))}
+            />
+          )}
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[600px] text-sm">

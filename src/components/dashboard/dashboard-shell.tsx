@@ -51,11 +51,11 @@ function NavLink({
       onClick={onClick}
       className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
         active
-          ? "bg-emerald-50 text-emerald-700"
+          ? "bg-orange-50 text-orange-700"
           : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
       }`}
     >
-      <Icon className={`h-4 w-4 shrink-0 ${active ? "text-emerald-600" : "text-zinc-400"}`} />
+      <Icon className={`h-4 w-4 shrink-0 ${active ? "text-orange-600" : "text-zinc-400"}`} />
       {label}
     </Link>
   );
@@ -130,7 +130,7 @@ export function DashboardShell({
                 <span
                   className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${
                     eventNav.eventStatus === "active"
-                      ? "bg-emerald-100 text-emerald-700"
+                      ? "bg-orange-100 text-orange-700"
                       : "bg-zinc-200 text-zinc-600"
                   }`}
                 >

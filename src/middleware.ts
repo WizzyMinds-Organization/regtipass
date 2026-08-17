@@ -29,7 +29,12 @@ export async function middleware(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
   const isPublic =
-    path === "/login" || path.startsWith("/_next") || path.startsWith("/api/keepalive");
+    path === "/login" ||
+    path === "/forgot-password" ||
+    path === "/reset-password" ||
+    path === "/sw.js" ||
+    path.startsWith("/_next") ||
+    path.startsWith("/api/keepalive");
 
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();

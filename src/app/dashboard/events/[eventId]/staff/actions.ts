@@ -102,6 +102,31 @@ export async function removeStaff(eventId: string, accountUserId: string) {
   revalidatePath(`/dashboard/events/${eventId}/staff`);
 }
 
+export async function resetStaffPassword(
+  eventId: string,
+  accountUserId: string
+): Promise<{ error: string | null; password?: string }> {
+  const ctx = await getEventContext(eventId);
+  if (!ctx || !ctx.isOwner) return { error: "Not authorized." };
+
+  const admin = createAdminClient();
+  const { data: member } = await admin
+    .from("account_users")
+    .select("user_id, account_id, is_owner")
+    .eq("id", accountUserId)
+    .maybeSingle();
+
+  if (!member || member.account_id !== ctx.event.account_id || member.is_owner) {
+    return { error: "Staff member not found." };
+  }
+
+  const password = randomPassword();
+  const { error } = await admin.auth.admin.updateUserById(member.user_id, { password });
+  if (error) return { error: error.message };
+
+  return { error: null, password };
+}
+
 export async function updateStaffPermissions(
   eventId: string,
   accountUserId: string,
