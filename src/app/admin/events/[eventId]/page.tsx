@@ -45,7 +45,7 @@ export default async function EventDetail({
           href={`/admin/accounts/${event.account_id}`}
           className="mb-2 inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900"
         >
-          <ChevronLeft className="h-3.5 w-3.5" />
+          <ChevronLeft className="h-4 w-4" />
           {accountName ?? "Account"}
         </Link>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

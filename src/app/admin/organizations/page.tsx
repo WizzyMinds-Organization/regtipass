@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { NewAccountModal } from "./new-account-modal";
@@ -37,15 +38,14 @@ export default async function OrganizationsPage() {
                 <th className="px-4 py-2 font-medium">Status</th>
                 <th className="px-4 py-2 font-medium">Events</th>
                 <th className="px-4 py-2 font-medium">Created</th>
+                <th className="px-4 py-2"></th>
               </tr>
             </thead>
             <tbody>
               {(accounts ?? []).map((a) => (
                 <tr key={a.id} className="border-t border-zinc-100 hover:bg-zinc-50">
                   <td className="px-4 py-3">
-                    <Link href={`/admin/accounts/${a.id}`} className="font-medium text-zinc-900 hover:underline">
-                      {a.name}
-                    </Link>
+                    <span className="font-medium text-zinc-900">{a.name}</span>
                     {a.contact_email && (
                       <div className="text-xs text-zinc-500">{a.contact_email}</div>
                     )}
@@ -67,11 +67,20 @@ export default async function OrganizationsPage() {
                   <td className="px-4 py-3 text-zinc-500">
                     {new Date(a.created_at).toLocaleDateString()}
                   </td>
+                  <td className="px-4 py-3 text-right">
+                    <Link
+                      href={`/admin/accounts/${a.id}`}
+                      title="View organization"
+                      className="inline-flex items-center justify-center rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-900"
+                    >
+                      <ArrowUpRight className="h-4 w-4" />
+                    </Link>
+                  </td>
                 </tr>
               ))}
               {(accounts ?? []).length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-zinc-400">
+                  <td colSpan={5} className="px-4 py-8 text-center text-zinc-400">
                     No organizations yet.
                   </td>
                 </tr>

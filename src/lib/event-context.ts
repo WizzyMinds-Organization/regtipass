@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import type { Event } from "@/lib/supabase/types";
@@ -10,7 +11,7 @@ export interface EventContext {
   canCheckin: boolean;
 }
 
-export async function getEventContext(eventId: string): Promise<EventContext | null> {
+export const getEventContext = cache(async (eventId: string): Promise<EventContext | null> => {
   const user = await getCurrentUser();
   if (!user) return null;
 
@@ -36,4 +37,4 @@ export async function getEventContext(eventId: string): Promise<EventContext | n
     canManageParticipants: membership.is_owner || membership.can_manage_participants,
     canCheckin: membership.is_owner || membership.can_checkin,
   };
-}
+});

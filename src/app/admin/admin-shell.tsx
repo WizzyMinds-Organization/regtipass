@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Building2, LayoutDashboard, LogOut, Menu, Search, ShieldCheck, X } from "lucide-react";
+import { Building2, KeyRound, LayoutDashboard, LogOut, Menu, Search, ShieldCheck, X } from "lucide-react";
 import { signOut } from "@/app/login/actions";
 import { LogoMark } from "@/components/logo";
 
@@ -79,6 +79,15 @@ export function AdminShell({
           <ShieldCheck className="h-4 w-4 shrink-0 text-zinc-400" />
           Super admin
         </div>
+
+        <Link
+          href="/account"
+          onClick={() => setMobileOpen(false)}
+          className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
+        >
+          <KeyRound className="h-4 w-4 shrink-0 text-zinc-400" />
+          Change password
+        </Link>
 
         <form action={signOut}>
           <button className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900">

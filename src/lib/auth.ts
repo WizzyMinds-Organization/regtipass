@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import type { AccountUser } from "@/lib/supabase/types";
 
@@ -9,7 +10,7 @@ export interface CurrentUser {
   memberships: AccountUser[];
 }
 
-export async function getCurrentUser(): Promise<CurrentUser | null> {
+export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   const supabase = await createClient();
   const {
     data: { user },
@@ -28,4 +29,4 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
     isSuperAdmin: !!superAdminRow,
     memberships: memberships ?? [],
   };
-}
+});

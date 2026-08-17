@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { LogoMark } from "@/components/logo";
+import { PasswordInput } from "@/components/password-input";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -78,16 +79,14 @@ export default function ResetPasswordPage() {
               <label htmlFor="password" className="text-sm font-medium text-zinc-700">
                 New password
               </label>
-              <input
+              <PasswordInput
                 id="password"
-                type="password"
                 required
                 minLength={8}
                 autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={!ready}
-                className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-orange-500 disabled:bg-zinc-50"
               />
             </div>
 

@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  CalendarRange,
   LayoutDashboard,
   ListChecks,
   Palette,
@@ -13,6 +12,7 @@ import {
   Users,
   Wallet,
   ChevronLeft,
+  KeyRound,
   LogOut,
   Search,
   Bell,
@@ -72,20 +72,24 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 export function DashboardShell({
   children,
   userEmail,
+  events,
 }: {
   children: React.ReactNode;
   userEmail: string | null;
+  events: { id: string; name: string; status: string }[];
 }) {
   const pathname = usePathname();
   const { eventNav } = useShell();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [prevPathname, setPrevPathname] = useState(pathname);
+
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
+    setMobileOpen(false);
+  }
 
   const insideEvent = eventNav && pathname.includes(`/dashboard/events/${eventNav.eventId}`);
   const initials = (userEmail ?? "?").slice(0, 1).toUpperCase();
-
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [pathname]);
 
   const closeMobile = () => setMobileOpen(false);
 
@@ -121,7 +125,7 @@ export function DashboardShell({
                 href="/dashboard"
                 className="mb-2 flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
               >
-                <ChevronLeft className="h-3.5 w-3.5" />
+                <ChevronLeft className="h-4 w-4" />
                 All events
               </Link>
 
@@ -209,15 +213,55 @@ export function DashboardShell({
               <div className="flex flex-col gap-0.5">
                 <NavLink
                   href="/dashboard"
-                  label="Events"
-                  icon={CalendarRange}
+                  label="Overview"
+                  icon={LayoutDashboard}
                   active={pathname === "/dashboard"}
                   onClick={closeMobile}
                 />
               </div>
+
+              {events.length > 0 && (
+                <>
+                  <SectionLabel>Events</SectionLabel>
+                  <div className="flex flex-col gap-0.5">
+                    {events.map((e) => {
+                      const href = `/dashboard/events/${e.id}`;
+                      const active = pathname.startsWith(href);
+                      return (
+                        <Link
+                          key={e.id}
+                          href={href}
+                          onClick={closeMobile}
+                          className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                            active
+                              ? "bg-orange-50 text-orange-700"
+                              : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                          }`}
+                        >
+                          <span
+                            className={`h-1.5 w-1.5 shrink-0 rounded-full ${
+                              e.status === "active" ? "bg-orange-500" : "bg-zinc-300"
+                            }`}
+                          />
+                          <span className="truncate">{e.name}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
             </>
           )}
         </nav>
+
+        <Link
+          href="/account"
+          onClick={closeMobile}
+          className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
+        >
+          <KeyRound className="h-4 w-4 shrink-0 text-zinc-400" />
+          Change password
+        </Link>
 
         <form action={signOut}>
           <button className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900">

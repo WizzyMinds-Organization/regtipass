@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
+import { ArrowUpRight, ChevronLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { setAccountStatus } from "@/app/admin/actions";
 import { NewEventModal } from "./new-event-modal";
 import { ResetOwnerPasswordButton } from "./reset-owner-password-button";
@@ -25,6 +26,23 @@ export default async function AccountDetail({
 
   if (!account) notFound();
 
+  const admin = createAdminClient();
+  const { data: ownerRow } = await admin
+    .from("account_users")
+    .select("user_id")
+    .eq("account_id", accountId)
+    .eq("is_owner", true)
+    .maybeSingle();
+  let ownerEmail = account.contact_email ?? "";
+  if (ownerRow) {
+    const { data: directoryRow } = await admin
+      .from("user_directory")
+      .select("email")
+      .eq("user_id", ownerRow.user_id)
+      .maybeSingle();
+    if (directoryRow?.email) ownerEmail = directoryRow.email;
+  }
+
   const toggleStatus = async () => {
     "use server";
     await setAccountStatus(accountId, account.status === "active" ? "suspended" : "active");
@@ -37,7 +55,7 @@ export default async function AccountDetail({
           href="/admin/organizations"
           className="mb-2 inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900"
         >
-          <ChevronLeft className="h-3.5 w-3.5" />
+          <ChevronLeft className="h-4 w-4" />
           All organizations
         </Link>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -49,7 +67,7 @@ export default async function AccountDetail({
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <NewEventModal accountId={accountId} />
-            <ResetOwnerPasswordButton accountId={accountId} />
+            {ownerEmail && <ResetOwnerPasswordButton accountId={accountId} ownerEmail={ownerEmail} />}
             <form action={toggleStatus}>
               <button
                 className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
@@ -74,16 +92,13 @@ export default async function AccountDetail({
               <th className="px-4 py-2 font-medium">Slug</th>
               <th className="px-4 py-2 font-medium">Status</th>
               <th className="px-4 py-2 font-medium">Quota</th>
+              <th className="px-4 py-2"></th>
             </tr>
           </thead>
           <tbody>
             {(events ?? []).map((e) => (
               <tr key={e.id} className="border-t border-zinc-100 hover:bg-zinc-50">
-                <td className="px-4 py-3">
-                  <Link href={`/admin/events/${e.id}`} className="font-medium text-zinc-900 hover:underline">
-                    {e.name}
-                  </Link>
-                </td>
+                <td className="px-4 py-3 font-medium text-zinc-900">{e.name}</td>
                 <td className="px-4 py-3 font-mono text-xs text-zinc-500">{e.slug}</td>
                 <td className="px-4 py-3">
                   <span
@@ -97,11 +112,20 @@ export default async function AccountDetail({
                   </span>
                 </td>
                 <td className="px-4 py-3 text-zinc-600">{e.ticket_quota}</td>
+                <td className="px-4 py-3 text-right">
+                  <Link
+                    href={`/admin/events/${e.id}`}
+                    title="View event"
+                    className="inline-flex items-center justify-center rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-900"
+                  >
+                    <ArrowUpRight className="h-4 w-4" />
+                  </Link>
+                </td>
               </tr>
             ))}
             {(events ?? []).length === 0 && (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-zinc-400">
+                <td colSpan={5} className="px-4 py-8 text-center text-zinc-400">
                   No events yet.
                 </td>
               </tr>

@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { signIn } from "./actions";
 import { LogoMark } from "@/components/logo";
+import { PasswordInput } from "@/components/password-input";
 
 export default function LoginPage() {
   const [state, formAction, pending] = useActionState(signIn, { error: null });
@@ -39,14 +40,7 @@ export default function LoginPage() {
                 Forgot password?
               </Link>
             </div>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              autoComplete="current-password"
-              className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-orange-500"
-            />
+            <PasswordInput id="password" name="password" required autoComplete="current-password" />
           </div>
 
           {state.error && <p className="text-sm text-red-600">{state.error}</p>}
