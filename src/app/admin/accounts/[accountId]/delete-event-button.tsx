@@ -3,10 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2, TriangleAlert, X } from "lucide-react";
+import { useToast } from "@/components/toast";
 import { deleteEvent } from "@/app/admin/actions";
 
 export function DeleteEventButton({ eventId, eventName }: { eventId: string; eventName: string }) {
   const router = useRouter();
+  const toast = useToast();
   const [open, setOpen] = useState(false);
   const [confirmText, setConfirmText] = useState("");
   const [deleting, setDeleting] = useState(false);
@@ -24,7 +26,7 @@ export function DeleteEventButton({ eventId, eventName }: { eventId: string; eve
     <>
       <button
         onClick={() => setOpen(true)}
-        className="text-zinc-400 hover:text-red-600"
+        className="rounded-md p-1.5 text-zinc-400 hover:bg-red-50 hover:text-red-600"
         title="Delete event"
       >
         <Trash2 className="h-4 w-4" />
@@ -77,6 +79,7 @@ export function DeleteEventButton({ eventId, eventName }: { eventId: string; eve
                     setError(res.error);
                     return;
                   }
+                  toast.success("Event deleted.");
                   router.refresh();
                   close();
                 }}

@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { GripVertical, Plus, Trash2, X } from "lucide-react";
+import { GripVertical, Plus, Ticket, Trash2, X } from "lucide-react";
 import type { FieldType, FormField } from "@/lib/supabase/types";
 import { createFormField, deleteFormField, reorderFormFields, updateFormField } from "./actions";
+import { ConfirmDialog, useConfirmDialog } from "@/components/confirm-dialog";
+import { UnsavedChangesGuard } from "@/components/unsaved-changes-guard";
 
 const TYPE_LABELS: Record<FieldType, string> = {
   text: "Short answer",
@@ -22,13 +24,13 @@ function newDraft(): FormField {
     field_type: "text",
     options: null,
     required: false,
+    show_on_ticket: false,
     sort_order: 0,
     created_at: new Date().toISOString(),
   };
 }
 
 function FieldCard({
-  eventId,
   field,
   onChange,
   onRemove,
@@ -40,7 +42,6 @@ function FieldCard({
   onDragEnd,
   dragOver,
 }: {
-  eventId: string;
   field: FormField;
   onChange: (next: FormField) => void;
   onRemove: () => void;
@@ -52,36 +53,6 @@ function FieldCard({
   onDragEnd?: (e: React.DragEvent) => void;
   dragOver?: boolean;
 }) {
-  const isDraft = field.id.startsWith("draft-");
-  const [saving, setSaving] = useState(false);
-
-  async function persistLabel(label: string) {
-    if (!label.trim()) return;
-    if (isDraft) {
-      setSaving(true);
-      const created = await createFormField(eventId, {
-        label,
-        field_type: field.field_type,
-        required: field.required,
-        options: field.options,
-      });
-      setSaving(false);
-      onChange(created);
-    } else {
-      await updateFormField(eventId, field.id, { label });
-    }
-  }
-
-  async function persist(patch: Partial<FormField>) {
-    if (isDraft) return; // structural fields (type/required/options) wait until label is saved first
-    await updateFormField(eventId, field.id, patch);
-  }
-
-  async function handleRemove() {
-    if (!isDraft) await deleteFormField(eventId, field.id);
-    onRemove();
-  }
-
   return (
     <div
       onDragOver={onDragOver}
@@ -91,35 +62,29 @@ function FieldCard({
       }`}
     >
       <div className="flex flex-wrap items-start gap-3">
-        {!isDraft && (
-          <span
-            draggable={draggable}
-            onDragStart={onDragStart}
-            onDragEnd={onDragEnd}
-            className="mt-1.5 shrink-0 cursor-grab text-zinc-300 hover:text-zinc-500 active:cursor-grabbing"
-            title="Drag to reorder"
-          >
-            <GripVertical className="h-4 w-4" />
-          </span>
-        )}
+        <span
+          draggable={draggable}
+          onDragStart={onDragStart}
+          onDragEnd={onDragEnd}
+          className="mt-1.5 shrink-0 cursor-grab text-zinc-300 hover:text-zinc-500 active:cursor-grabbing"
+          title="Drag to reorder"
+        >
+          <GripVertical className="h-4 w-4" />
+        </span>
         <input
           autoFocus={autoFocus}
           value={field.label}
           onChange={(e) => onChange({ ...field, label: e.target.value })}
-          onBlur={(e) => persistLabel(e.target.value)}
           placeholder="Question"
           className="min-w-0 flex-1 border-b border-zinc-200 pb-1.5 text-base font-medium text-zinc-900 outline-none focus:border-orange-500"
         />
         <select
           value={field.field_type}
-          disabled={isDraft}
           onChange={(e) => {
             const field_type = e.target.value as FieldType;
-            const next = { ...field, field_type, options: field_type === "select" ? field.options ?? ["Option 1"] : null };
-            onChange(next);
-            persist({ field_type: next.field_type, options: next.options });
+            onChange({ ...field, field_type, options: field_type === "select" ? field.options ?? ["Option 1"] : null });
           }}
-          className="shrink-0 rounded-md border border-zinc-300 px-2 py-1.5 text-sm text-zinc-700 disabled:opacity-50"
+          className="shrink-0 rounded-md border border-zinc-300 px-2 py-1.5 text-sm text-zinc-700"
         >
           {Object.entries(TYPE_LABELS).map(([value, label]) => (
             <option key={value} value={value}>
@@ -128,8 +93,8 @@ function FieldCard({
           ))}
         </select>
         <button
-          onClick={handleRemove}
-          className="shrink-0 text-zinc-400 hover:text-red-600"
+          onClick={onRemove}
+          className="shrink-0 rounded-md p-1.5 text-zinc-400 hover:bg-red-50 hover:text-red-600"
           title="Remove question"
         >
           <Trash2 className="h-4 w-4" />
@@ -144,41 +109,33 @@ function FieldCard({
                 <span className="h-3 w-3 shrink-0 rounded-full border border-zinc-300" />
                 <input
                   value={opt}
-                  disabled={isDraft}
                   onChange={(e) => {
                     const options = [...(field.options ?? [])];
                     options[i] = e.target.value;
                     onChange({ ...field, options });
                   }}
-                  onBlur={() => persist({ options: field.options })}
-                  className="flex-1 border-b border-zinc-100 py-1 text-sm text-zinc-700 outline-none focus:border-orange-500 disabled:opacity-50"
+                  className="flex-1 border-b border-zinc-100 py-1 text-sm text-zinc-700 outline-none focus:border-orange-500"
                 />
-                {!isDraft && (
-                  <button
-                    onClick={() => {
-                      const options = (field.options ?? []).filter((_, idx) => idx !== i);
-                      onChange({ ...field, options });
-                      persist({ options });
-                    }}
-                    className="text-zinc-300 hover:text-red-500"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                )}
+                <button
+                  onClick={() => {
+                    const options = (field.options ?? []).filter((_, idx) => idx !== i);
+                    onChange({ ...field, options });
+                  }}
+                  className="text-zinc-300 hover:text-red-500"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
               </div>
             ))}
-            {!isDraft && (
-              <button
-                onClick={() => {
-                  const options = [...(field.options ?? []), `Option ${(field.options?.length ?? 0) + 1}`];
-                  onChange({ ...field, options });
-                  persist({ options });
-                }}
-                className="ml-5 self-start text-sm text-zinc-400 hover:text-orange-600"
-              >
-                + Add option
-              </button>
-            )}
+            <button
+              onClick={() => {
+                const options = [...(field.options ?? []), `Option ${(field.options?.length ?? 0) + 1}`];
+                onChange({ ...field, options });
+              }}
+              className="ml-5 self-start text-sm text-zinc-400 hover:text-orange-600"
+            >
+              + Add option
+            </button>
           </div>
         ) : (
           <input
@@ -197,27 +154,40 @@ function FieldCard({
         )}
       </div>
 
-      <div className="mt-3 flex items-center justify-end gap-2 border-t border-zinc-100 pt-3">
-        {saving && <span className="text-xs text-zinc-400">Saving...</span>}
+      <div className="mt-3 flex flex-wrap items-center justify-end gap-4 border-t border-zinc-100 pt-3">
+        <label className="flex items-center gap-2 text-sm text-zinc-600">
+          <Ticket className="h-3.5 w-3.5 text-zinc-400" />
+          Show on ticket
+          <button
+            type="button"
+            role="switch"
+            aria-checked={field.show_on_ticket}
+            onClick={() => onChange({ ...field, show_on_ticket: !field.show_on_ticket })}
+            className={`relative inline-block h-5 w-9 shrink-0 overflow-hidden rounded-full align-middle outline-none transition-colors ${
+              field.show_on_ticket ? "bg-orange-600" : "bg-zinc-200"
+            }`}
+          >
+            <span
+              className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${
+                field.show_on_ticket ? "translate-x-4" : "translate-x-0"
+              }`}
+            />
+          </button>
+        </label>
         <label className="flex items-center gap-2 text-sm text-zinc-600">
           Required
           <button
             type="button"
             role="switch"
             aria-checked={field.required}
-            disabled={isDraft}
-            onClick={() => {
-              const required = !field.required;
-              onChange({ ...field, required });
-              persist({ required });
-            }}
-            className={`relative h-5 w-9 rounded-full transition-colors disabled:opacity-50 ${
+            onClick={() => onChange({ ...field, required: !field.required })}
+            className={`relative inline-block h-5 w-9 shrink-0 overflow-hidden rounded-full align-middle outline-none transition-colors ${
               field.required ? "bg-orange-600" : "bg-zinc-200"
             }`}
           >
             <span
-              className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${
-                field.required ? "translate-x-4" : "translate-x-0.5"
+              className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${
+                field.required ? "translate-x-4" : "translate-x-0"
               }`}
             />
           </button>
@@ -237,16 +207,18 @@ export function FormBuilder({
   editable: boolean;
 }) {
   const [fields, setFields] = useState(initialFields);
+  const [savedFields, setSavedFields] = useState(initialFields);
   const [focusId, setFocusId] = useState<string | null>(null);
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const cancelDialog = useConfirmDialog();
+
+  const dirty = JSON.stringify(fields) !== JSON.stringify(savedFields);
 
   function updateField(id: string, next: FormField) {
     setFields((prev) => prev.map((f) => (f.id === id ? next : f)));
-  }
-
-  function replaceDraft(draftId: string, created: FormField) {
-    setFields((prev) => prev.map((f) => (f.id === draftId ? created : f)));
   }
 
   function removeField(id: string) {
@@ -272,13 +244,65 @@ export function FormBuilder({
       const [moved] = next.splice(from, 1);
       next.splice(to, 0, moved);
       setFields(next);
-      reorderFormFields(
-        eventId,
-        next.map((f) => f.id)
-      ).catch(() => {});
     }
     setDraggedId(null);
     setDragOverId(null);
+  }
+
+  function handleCancel() {
+    setFields(savedFields);
+    setSaveError(null);
+  }
+
+  async function handleSave() {
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const currentIds = new Set(fields.map((f) => f.id));
+      const deletions = savedFields.filter((f) => !currentIds.has(f.id));
+      for (const f of deletions) {
+        await deleteFormField(eventId, f.id);
+      }
+
+      const finalFields: FormField[] = [];
+      for (const f of fields) {
+        if (f.id.startsWith("draft-")) {
+          if (!f.label.trim()) continue;
+          const created = await createFormField(eventId, {
+            label: f.label,
+            field_type: f.field_type,
+            required: f.required,
+            options: f.options,
+            show_on_ticket: f.show_on_ticket,
+          });
+          finalFields.push(created);
+        } else {
+          const original = savedFields.find((s) => s.id === f.id);
+          if (original && JSON.stringify(original) !== JSON.stringify(f)) {
+            const { error } = await updateFormField(eventId, f.id, {
+              label: f.label,
+              field_type: f.field_type,
+              required: f.required,
+              options: f.options,
+              show_on_ticket: f.show_on_ticket,
+            });
+            if (error) throw new Error(error);
+          }
+          finalFields.push(f);
+        }
+      }
+
+      const orderChanged = finalFields.map((f) => f.id).join(",") !== savedFields.map((f) => f.id).join(",");
+      if (orderChanged) {
+        await reorderFormFields(eventId, finalFields.map((f) => f.id));
+      }
+
+      setFields(finalFields);
+      setSavedFields(finalFields);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Failed to save.");
+    }
+    setSaving(false);
   }
 
   if (!editable && fields.length === 0) {
@@ -287,10 +311,34 @@ export function FormBuilder({
 
   return (
     <div className="flex flex-col gap-3">
+      {editable && (
+        <div className="sticky top-0 z-10 flex items-center justify-between rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm shadow-sm">
+          <span className={dirty ? "text-amber-900" : "text-zinc-400"}>
+            {dirty ? "Unsaved changes" : "No unsaved changes"}
+          </span>
+          <div className="flex items-center gap-2">
+            {saveError && <span className="text-red-600">{saveError}</span>}
+            <button
+              onClick={cancelDialog.show}
+              disabled={saving || !dirty}
+              className="rounded-md px-3 py-1.5 text-sm font-medium text-zinc-600 hover:bg-zinc-100 disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving || !dirty}
+              className="rounded-md bg-orange-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-orange-700 disabled:opacity-50"
+            >
+              {saving ? "Saving..." : "Save"}
+            </button>
+          </div>
+        </div>
+      )}
+
       {fields.map((f) => (
         <FieldCard
           key={f.id}
-          eventId={eventId}
           field={f}
           autoFocus={f.id === focusId}
           draggable={editable}
@@ -308,13 +356,7 @@ export function FormBuilder({
             setDraggedId(null);
             setDragOverId(null);
           }}
-          onChange={(next) => {
-            if (f.id.startsWith("draft-") && !next.id.startsWith("draft-")) {
-              replaceDraft(f.id, next);
-            } else {
-              updateField(f.id, next);
-            }
-          }}
+          onChange={(next) => updateField(f.id, next)}
           onRemove={() => removeField(f.id)}
         />
       ))}
@@ -334,6 +376,20 @@ export function FormBuilder({
           Add question
         </button>
       )}
+
+      <UnsavedChangesGuard dirty={editable && dirty} />
+      <ConfirmDialog
+        open={cancelDialog.open}
+        title="Discard changes?"
+        message="You have unsaved changes to this form. Discard them?"
+        confirmLabel="Discard"
+        danger
+        onConfirm={() => {
+          handleCancel();
+          cancelDialog.hide();
+        }}
+        onCancel={cancelDialog.hide}
+      />
     </div>
   );
 }

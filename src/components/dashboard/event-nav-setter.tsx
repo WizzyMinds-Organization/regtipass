@@ -15,8 +15,10 @@ export function EventNavSetter(config: EventNavConfig) {
     config.eventName,
     config.eventStatus,
     config.isOwner,
+    config.canManageForm,
     config.canCheckin,
     config.canManageParticipants,
+    config.checkinOnly,
   ]);
 
   return null;

@@ -14,7 +14,7 @@ export default async function EventLayout({
   const ctx = await getEventContext(eventId);
   if (!ctx) notFound();
 
-  const { event, isOwner, canManageParticipants, canCheckin } = ctx;
+  const { event, isOwner, canManageForm, canManageParticipants, canCheckin, checkinOnly } = ctx;
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6">
@@ -24,8 +24,10 @@ export default async function EventLayout({
         eventName={event.name}
         eventStatus={event.status}
         isOwner={isOwner}
+        canManageForm={canManageForm}
         canCheckin={canCheckin}
         canManageParticipants={canManageParticipants}
+        checkinOnly={checkinOnly}
       />
 
       {event.status === "closed" && (

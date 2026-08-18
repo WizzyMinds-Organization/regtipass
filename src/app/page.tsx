@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
 import { getCurrentUser } from "@/lib/auth";
 import { getEventContext } from "@/lib/event-context";
+import { getLastEventId } from "@/lib/last-event";
 
 export default async function Home() {
   const user = await getCurrentUser();
@@ -10,10 +10,13 @@ export default async function Home() {
   if (user.isSuperAdmin) redirect("/admin");
   if (user.memberships.length === 0) redirect("/login?error=no_access");
 
-  const lastEventId = (await cookies()).get("last_event_id")?.value;
+  const lastEventId = await getLastEventId();
   if (lastEventId) {
     const ctx = await getEventContext(lastEventId);
-    if (ctx) redirect(`/dashboard/events/${lastEventId}`);
+    if (ctx) {
+      if (ctx.checkinOnly) redirect(`/dashboard/events/${lastEventId}/checkin`);
+      redirect(`/dashboard/events/${lastEventId}`);
+    }
   }
 
   redirect("/dashboard");

@@ -13,16 +13,10 @@ async function requireSuperAdmin() {
   return user;
 }
 
-function randomPassword() {
-  const bytes = new Uint8Array(18);
-  crypto.getRandomValues(bytes);
-  return Buffer.from(bytes).toString("base64url");
-}
-
 interface CreateAccountState {
   error: string | null;
-  ownerPassword?: string;
   ownerEmail?: string;
+  created?: boolean;
 }
 
 export async function createAccount(
@@ -32,10 +26,15 @@ export async function createAccount(
   await requireSuperAdmin();
 
   const name = String(formData.get("name") ?? "").trim();
+  const ownerName = String(formData.get("owner_name") ?? "").trim();
   const ownerEmail = String(formData.get("owner_email") ?? "").trim();
+  const password = String(formData.get("owner_password") ?? "");
 
-  if (!name || !ownerEmail) {
-    return { error: "Organization name and email are required." };
+  if (!name || !ownerName || !ownerEmail) {
+    return { error: "Organization name, owner name, and owner email are required." };
+  }
+  if (password.length < 8) {
+    return { error: "Password must be at least 8 characters." };
   }
 
   const admin = createAdminClient();
@@ -50,7 +49,6 @@ export async function createAccount(
     return { error: accountError?.message ?? "Failed to create account." };
   }
 
-  const password = randomPassword();
   const { data: userData, error: userError } = await admin.auth.admin.createUser({
     email: ownerEmail,
     password,
@@ -66,8 +64,7 @@ export async function createAccount(
     account_id: account.id,
     user_id: userData.user.id,
     is_owner: true,
-    can_checkin: true,
-    can_manage_participants: true,
+    name: ownerName,
   });
 
   if (linkError) {
@@ -76,13 +73,18 @@ export async function createAccount(
 
   revalidatePath("/admin");
   revalidatePath("/admin/organizations");
-  return { error: null, ownerPassword: password, ownerEmail };
+  return { error: null, ownerEmail, created: true };
 }
 
 export async function resetOwnerPassword(
-  accountId: string
-): Promise<{ error: string | null; password?: string; email?: string }> {
+  accountId: string,
+  password: string
+): Promise<{ error: string | null }> {
   await requireSuperAdmin();
+
+  if (password.length < 8) {
+    return { error: "Password must be at least 8 characters." };
+  }
 
   const admin = createAdminClient();
   const { data: owner } = await admin
@@ -94,17 +96,10 @@ export async function resetOwnerPassword(
 
   if (!owner) return { error: "Owner not found." };
 
-  const password = randomPassword();
   const { error } = await admin.auth.admin.updateUserById(owner.user_id, { password });
   if (error) return { error: error.message };
 
-  const { data: directoryRow } = await admin
-    .from("user_directory")
-    .select("email")
-    .eq("user_id", owner.user_id)
-    .maybeSingle();
-
-  return { error: null, password, email: directoryRow?.email };
+  return { error: null };
 }
 
 export async function createEvent(formData: FormData) {

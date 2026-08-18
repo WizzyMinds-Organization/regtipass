@@ -48,14 +48,15 @@ export function DesignTabs({
             tab === "templates" ? "border-orange-600 text-orange-700" : "border-transparent text-zinc-500 hover:text-zinc-900"
           }`}
         >
-          2. Templates
+          2. Ticket templates
         </button>
       </div>
 
       {tab === "form" ? (
         <>
           <p className="text-sm text-zinc-500">
-            Define which fields to collect for each participant, then switch to Templates to design the ticket.
+            Define which fields to collect for each participant, then switch to Ticket templates to design the
+            ticket.
           </p>
           <FormBuilder eventId={eventId} initialFields={fields} editable={editable} />
         </>
@@ -71,25 +72,26 @@ export function DesignTabs({
 
           <div className="grid gap-4 sm:grid-cols-3">
             {templates.map((t) => (
-              <Link
+              <div
                 key={t.id}
-                href={`/dashboard/events/${eventId}/templates/${t.id}`}
                 className="group overflow-hidden rounded-2xl border border-zinc-200 bg-white hover:border-zinc-400"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={t.url} alt={t.name} className="aspect-[3/2] w-full object-cover" />
+                <Link href={`/dashboard/events/${eventId}/templates/${t.id}`}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={t.url} alt={t.name} className="aspect-[3/2] w-full object-cover" />
+                </Link>
                 <div className="flex items-center justify-between p-3">
-                  <div>
+                  <Link href={`/dashboard/events/${eventId}/templates/${t.id}`} className="min-w-0">
                     <span className="text-sm font-medium text-zinc-900">{t.name}</span>
                     <p className="text-xs text-zinc-500">{t.price > 0 ? t.price : "Free"}</p>
-                  </div>
+                  </Link>
                   {editable && <DeleteTemplateButton eventId={eventId} templateId={t.id} />}
                 </div>
-              </Link>
+              </div>
             ))}
             {templates.length === 0 && (
               <div className="col-span-full rounded-2xl border border-dashed border-zinc-300 bg-white p-8 text-center text-sm text-zinc-400">
-                No templates yet.
+                No ticket templates yet.
               </div>
             )}
           </div>

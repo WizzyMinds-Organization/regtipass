@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
   }
 
   const ctx = await getEventContext(eventId);
-  if (!ctx || !ctx.isOwner) {
+  if (!ctx || !ctx.canManageForm) {
     return NextResponse.json({ error: "Not authorized." }, { status: 403 });
   }
   if (ctx.event.status !== "active") {

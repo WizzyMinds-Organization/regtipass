@@ -17,15 +17,15 @@ type AnchorPatch = Partial<{
   visible: boolean;
 }>;
 
-async function requireOwner(eventId: string) {
+async function requireFormManager(eventId: string) {
   const ctx = await getEventContext(eventId);
-  if (!ctx || !ctx.isOwner) throw new Error("Not authorized.");
+  if (!ctx || !ctx.canManageForm) throw new Error("Not authorized.");
   if (ctx.event.status !== "active") throw new Error("Event is closed.");
   return ctx;
 }
 
 export async function updateTemplatePrice(eventId: string, templateId: string, price: number) {
-  await requireOwner(eventId);
+  await requireFormManager(eventId);
   if (!Number.isFinite(price) || price < 0) throw new Error("Price must be a non-negative number.");
   const supabase = await createClient();
   const { error } = await supabase.from("templates").update({ price }).eq("id", templateId);
@@ -35,7 +35,7 @@ export async function updateTemplatePrice(eventId: string, templateId: string, p
 }
 
 export async function deleteTemplate(eventId: string, templateId: string) {
-  await requireOwner(eventId);
+  await requireFormManager(eventId);
   const supabase = await createClient();
   const { error } = await supabase.from("templates").delete().eq("id", templateId);
   if (error) throw new Error(error.message);
@@ -48,7 +48,7 @@ export async function addAnchor(
   kind: AnchorKind,
   fieldKey: string | null
 ): Promise<TemplateAnchor> {
-  await requireOwner(eventId);
+  await requireFormManager(eventId);
   const supabase = await createClient();
 
   const defaults: Record<AnchorKind, { width: number; height: number; font_size: number }> = {
@@ -75,7 +75,7 @@ export async function addAnchor(
 }
 
 export async function deleteAnchor(eventId: string, templateId: string, anchorId: string) {
-  await requireOwner(eventId);
+  await requireFormManager(eventId);
   const supabase = await createClient();
   const { error } = await supabase.from("template_anchors").delete().eq("id", anchorId);
   if (error) throw new Error(error.message);
@@ -91,7 +91,7 @@ export async function saveAnchors(
   templateId: string,
   updates: { id: string; patch: AnchorPatch }[]
 ) {
-  await requireOwner(eventId);
+  await requireFormManager(eventId);
   if (updates.length === 0) return;
   const supabase = await createClient();
 

@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getEventContext } from "@/lib/event-context";
 import { PageHeader } from "@/components/dashboard/page-header";
-import { CheckinScanner } from "./scanner";
+import { CheckinTabs } from "./checkin-tabs";
 
 export default async function CheckinPage({
   params,
@@ -23,8 +23,8 @@ export default async function CheckinPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Check-in" subtitle="Scan a ticket's QR code, or type the printed ID manually." />
-      <CheckinScanner eventId={eventId} />
+      <PageHeader title="Check-in" compact />
+      <CheckinTabs eventId={eventId} />
     </div>
   );
 }

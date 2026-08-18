@@ -4,17 +4,14 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getEventContext } from "@/lib/event-context";
+import type { StaffRole } from "@/lib/supabase/types";
 
-function randomPassword() {
-  const bytes = new Uint8Array(18);
-  crypto.getRandomValues(bytes);
-  return Buffer.from(bytes).toString("base64url");
-}
+const VALID_ROLES: StaffRole[] = ["manager", "issuer", "checkin"];
 
 interface InviteStaffState {
   error: string | null;
-  password?: string;
   email?: string;
+  invited?: boolean;
 }
 
 export async function inviteStaff(
@@ -26,13 +23,13 @@ export async function inviteStaff(
   if (!ctx || !ctx.isOwner) return { error: "Not authorized." };
 
   const email = String(formData.get("email") ?? "").trim();
-  const canCheckin = formData.get("can_checkin") === "on";
-  const canManageParticipants = formData.get("can_manage_participants") === "on";
+  const name = String(formData.get("name") ?? "").trim();
+  const password = String(formData.get("password") ?? "");
+  const role = String(formData.get("role") ?? "") as StaffRole;
 
   if (!email) return { error: "Email is required." };
-  if (!canCheckin && !canManageParticipants) {
-    return { error: "Grant at least one permission." };
-  }
+  if (!name) return { error: "Name is required." };
+  if (!VALID_ROLES.includes(role)) return { error: "Choose a role." };
 
   const admin = createAdminClient();
 
@@ -42,7 +39,6 @@ export async function inviteStaff(
     .eq("account_id", ctx.event.account_id);
 
   let userId: string | null = null;
-  let password: string | undefined;
 
   const { data: existingDirectoryUser } = await admin
     .from("user_directory")
@@ -53,7 +49,7 @@ export async function inviteStaff(
   if (existingDirectoryUser) {
     userId = existingDirectoryUser.user_id;
   } else {
-    password = randomPassword();
+    if (password.length < 8) return { error: "Password must be at least 8 characters." };
     const { data: created, error: createError } = await admin.auth.admin.createUser({
       email,
       password,
@@ -69,7 +65,7 @@ export async function inviteStaff(
   if (alreadyMember) {
     const { error } = await admin
       .from("account_users")
-      .update({ can_checkin: canCheckin, can_manage_participants: canManageParticipants })
+      .update({ role, name })
       .eq("account_id", ctx.event.account_id)
       .eq("user_id", userId);
     if (error) return { error: error.message };
@@ -78,14 +74,14 @@ export async function inviteStaff(
       account_id: ctx.event.account_id,
       user_id: userId,
       is_owner: false,
-      can_checkin: canCheckin,
-      can_manage_participants: canManageParticipants,
+      role,
+      name,
     });
     if (error) return { error: error.message };
   }
 
   revalidatePath(`/dashboard/events/${eventId}/staff`);
-  return { error: null, password, email };
+  return { error: null, email, invited: true };
 }
 
 export async function removeStaff(eventId: string, accountUserId: string) {
@@ -104,10 +100,12 @@ export async function removeStaff(eventId: string, accountUserId: string) {
 
 export async function resetStaffPassword(
   eventId: string,
-  accountUserId: string
-): Promise<{ error: string | null; password?: string }> {
+  accountUserId: string,
+  password: string
+): Promise<{ error: string | null }> {
   const ctx = await getEventContext(eventId);
   if (!ctx || !ctx.isOwner) return { error: "Not authorized." };
+  if (password.length < 8) return { error: "Password must be at least 8 characters." };
 
   const admin = createAdminClient();
   const { data: member } = await admin
@@ -120,26 +118,21 @@ export async function resetStaffPassword(
     return { error: "Staff member not found." };
   }
 
-  const password = randomPassword();
   const { error } = await admin.auth.admin.updateUserById(member.user_id, { password });
   if (error) return { error: error.message };
 
-  return { error: null, password };
+  return { error: null };
 }
 
-export async function updateStaffPermissions(
-  eventId: string,
-  accountUserId: string,
-  canCheckin: boolean,
-  canManageParticipants: boolean
-) {
+export async function updateStaffRole(eventId: string, accountUserId: string, role: StaffRole) {
   const ctx = await getEventContext(eventId);
   if (!ctx || !ctx.isOwner) throw new Error("Not authorized.");
+  if (!VALID_ROLES.includes(role)) throw new Error("Invalid role.");
 
   const supabase = await createClient();
   const { error } = await supabase
     .from("account_users")
-    .update({ can_checkin: canCheckin, can_manage_participants: canManageParticipants })
+    .update({ role })
     .eq("id", accountUserId)
     .eq("is_owner", false);
   if (error) throw new Error(error.message);

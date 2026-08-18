@@ -35,8 +35,8 @@ export default async function StaffPage({
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Staff"
-        subtitle="Check-in staff can only scan and view live counts. Participant staff can add participants and issue tickets. Grant either or both."
+        title="Staff management"
+        subtitle="Manager: edit forms/templates, issue, check in. Issuer: issue tickets, check in. Check-in Staff: check in only, no ticket IDs."
         action={<InviteStaffForm eventId={eventId} />}
       />
 
@@ -45,9 +45,9 @@ export default async function StaffPage({
         <table className="w-full min-w-[480px] text-sm">
           <thead className="bg-zinc-50 text-left text-zinc-500">
             <tr>
+              <th className="px-4 py-2 font-medium">Name</th>
               <th className="px-4 py-2 font-medium">Email</th>
-              <th className="px-4 py-2 font-medium">Check-in</th>
-              <th className="px-4 py-2 font-medium">Participants</th>
+              <th className="px-4 py-2 font-medium">Role</th>
               <th className="px-4 py-2"></th>
             </tr>
           </thead>
@@ -57,9 +57,9 @@ export default async function StaffPage({
                 key={m.id}
                 eventId={eventId}
                 accountUserId={m.id}
+                name={m.name}
                 email={emailById.get(m.user_id) ?? m.user_id}
-                canCheckin={m.can_checkin}
-                canManageParticipants={m.can_manage_participants}
+                role={m.role ?? "issuer"}
               />
             ))}
             {staff.length === 0 && (

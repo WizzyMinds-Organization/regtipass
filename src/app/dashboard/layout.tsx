@@ -16,9 +16,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
     .select("id, name, status")
     .order("created_at", { ascending: false });
 
+  const userName = user.memberships.find((m) => m.name)?.name ?? null;
+
   return (
     <ShellProvider>
-      <DashboardShell userEmail={user.email} events={events ?? []}>
+      <DashboardShell userEmail={user.email} userName={userName} events={events ?? []}>
         {children}
       </DashboardShell>
     </ShellProvider>

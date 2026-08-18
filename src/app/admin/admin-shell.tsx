@@ -98,7 +98,7 @@ export function AdminShell({
           </button>
           <div className="flex-1" />
 
-          <ProfileMenu email={userEmail} manageHref="/admin/organizations" manageLabel="Manage organizations" />
+          <ProfileMenu name={null} email={userEmail} manageHref="/admin/organizations" manageLabel="Manage organizations" />
         </header>
 
         <main className="flex-1 px-4 py-5 sm:px-6 sm:py-6">{children}</main>

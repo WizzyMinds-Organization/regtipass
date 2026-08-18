@@ -6,14 +6,14 @@ import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { IssueForm } from "./issue-form";
 
-function BackToSales({ eventId }: { eventId: string }) {
+function BackLink({ eventId, isOwner }: { eventId: string; isOwner: boolean }) {
   return (
     <Link
-      href={`/dashboard/events/${eventId}/sales`}
+      href={isOwner ? `/dashboard/events/${eventId}/sales` : `/dashboard/events/${eventId}`}
       className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900"
     >
       <ChevronLeft className="h-4 w-4" />
-      Sales
+      {isOwner ? "Finance overview" : "Overview"}
     </Link>
   );
 }
@@ -39,7 +39,7 @@ export default async function IssuePage({
   if (ctx.event.status !== "active") {
     return (
       <div className="flex flex-col gap-6">
-        <BackToSales eventId={eventId} />
+        <BackLink eventId={eventId} isOwner={ctx.isOwner} />
         <PageHeader title="Issue tickets" />
         <p className="text-zinc-500">This event is closed — ticket issuance is disabled.</p>
       </div>
@@ -49,7 +49,7 @@ export default async function IssuePage({
   if ((templates ?? []).length === 0) {
     return (
       <div className="flex flex-col gap-6">
-        <BackToSales eventId={eventId} />
+        <BackLink eventId={eventId} isOwner={ctx.isOwner} />
         <PageHeader title="Issue tickets" />
         <p className="text-zinc-500">No ticket templates yet. An account owner needs to design one first.</p>
       </div>
@@ -58,7 +58,7 @@ export default async function IssuePage({
 
   return (
     <div className="flex flex-col gap-4">
-      <BackToSales eventId={eventId} />
+      <BackLink eventId={eventId} isOwner={ctx.isOwner} />
       <PageHeader
         title="Issue tickets"
         subtitle={`${remaining} of ${ctx.event.ticket_quota} tickets remaining.`}

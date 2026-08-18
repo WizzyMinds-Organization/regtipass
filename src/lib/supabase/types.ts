@@ -5,6 +5,7 @@ export type AnchorKind = "qr" | "ticket_id" | "field";
 export type TicketStatus = "issued" | "checked_in";
 export type CheckInResult = "success" | "already_checked_in" | "invalid";
 export type HandoverRecipientType = "organizer" | "finance" | "vendor" | "other";
+export type StaffRole = "manager" | "issuer" | "checkin";
 
 export interface Account {
   id: string;
@@ -19,8 +20,8 @@ export interface AccountUser {
   account_id: string;
   user_id: string;
   is_owner: boolean;
-  can_checkin: boolean;
-  can_manage_participants: boolean;
+  role: StaffRole | null;
+  name: string;
   created_at: string;
 }
 
@@ -45,6 +46,7 @@ export interface FormField {
   field_type: FieldType;
   options: string[] | null;
   required: boolean;
+  show_on_ticket: boolean;
   sort_order: number;
   created_at: string;
 }

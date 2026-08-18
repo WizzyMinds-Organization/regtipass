@@ -50,7 +50,7 @@ export function UploadTemplateForm({ eventId }: { eventId: string }) {
         className="inline-flex items-center gap-1.5 self-start rounded-md bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700"
       >
         <Plus className="h-4 w-4" />
-        New template
+        New ticket template
       </button>
 
       {open && (
@@ -58,7 +58,7 @@ export function UploadTemplateForm({ eventId }: { eventId: string }) {
           <div className="absolute inset-0 bg-black/30" onClick={() => setOpen(false)} aria-hidden />
           <div className="relative w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-5 shadow-xl">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-zinc-900">New template</h2>
+              <h2 className="text-sm font-semibold text-zinc-900">New ticket template</h2>
               <button
                 onClick={() => setOpen(false)}
                 className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700"

@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
+import { setLastEvent } from "@/lib/last-event";
 
 export function TrackLastEvent({ eventId }: { eventId: string }) {
   useEffect(() => {
-    document.cookie = `last_event_id=${eventId}; path=/; max-age=${60 * 60 * 24 * 90}`;
+    setLastEvent(eventId).catch(() => {});
   }, [eventId]);
 
   return null;

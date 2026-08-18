@@ -68,10 +68,12 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 export function DashboardShell({
   children,
   userEmail,
+  userName,
   events,
 }: {
   children: React.ReactNode;
   userEmail: string | null;
+  userName: string | null;
   events: { id: string; name: string; status: string }[];
 }) {
   const pathname = usePathname();
@@ -99,7 +101,7 @@ export function DashboardShell({
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-72 max-w-[85vw] flex-col border-r border-zinc-200 bg-white px-3 py-4 transition-transform duration-200 lg:static lg:z-auto lg:w-64 lg:max-w-none lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-72 max-w-[85vw] flex-col border-r border-zinc-200 bg-white px-3 py-4 transition-transform duration-200 lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:w-64 lg:max-w-none lg:translate-x-0 ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -131,14 +133,16 @@ export function DashboardShell({
 
               <SectionLabel>Event</SectionLabel>
               <div className="flex flex-col gap-0.5">
-                <NavLink
-                  href={`/dashboard/events/${eventNav.eventId}`}
-                  label="Overview"
-                  icon={LayoutDashboard}
-                  active={pathname === `/dashboard/events/${eventNav.eventId}`}
-                  onClick={closeMobile}
-                />
-                {eventNav.isOwner && (
+                {!eventNav.checkinOnly && (
+                  <NavLink
+                    href={`/dashboard/events/${eventNav.eventId}`}
+                    label="Overview"
+                    icon={LayoutDashboard}
+                    active={pathname === `/dashboard/events/${eventNav.eventId}`}
+                    onClick={closeMobile}
+                  />
+                )}
+                {eventNav.canManageForm && (
                   <NavLink
                     href={`/dashboard/events/${eventNav.eventId}/form`}
                     label="Form & templates"
@@ -156,10 +160,10 @@ export function DashboardShell({
                     onClick={closeMobile}
                   />
                 )}
-                {eventNav.canManageParticipants && (
+                {eventNav.isOwner && (
                   <NavLink
                     href={`/dashboard/events/${eventNav.eventId}/sales`}
-                    label="Ticket sales"
+                    label="Finance overview"
                     icon={Wallet}
                     active={pathname.endsWith("/sales") || pathname.endsWith("/issue")}
                     onClick={closeMobile}
@@ -168,7 +172,7 @@ export function DashboardShell({
                 {eventNav.isOwner && (
                   <NavLink
                     href={`/dashboard/events/${eventNav.eventId}/staff`}
-                    label="Staff"
+                    label="Staff management"
                     icon={Users}
                     active={pathname.endsWith("/staff")}
                     onClick={closeMobile}
@@ -232,7 +236,7 @@ export function DashboardShell({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-zinc-200 bg-white px-4 sm:px-6">
+        <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between gap-3 border-b border-zinc-200 bg-white px-4 sm:px-6">
           <button
             onClick={() => setMobileOpen(true)}
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-zinc-500 hover:bg-zinc-100 lg:hidden"
@@ -244,7 +248,7 @@ export function DashboardShell({
             <button className="hidden h-9 w-9 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 sm:flex">
               <Bell className="h-4 w-4" />
             </button>
-            <ProfileMenu email={userEmail} manageHref="/dashboard" manageLabel="All events" />
+            <ProfileMenu name={userName} email={userEmail} manageHref="/dashboard" manageLabel="All events" />
           </div>
         </header>
 

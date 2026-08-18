@@ -1,15 +1,24 @@
 import Link from "next/link";
 import { CalendarRange, CheckCircle2, PauseCircle, Ticket } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
 
 export default async function DashboardHome() {
+  const user = await getCurrentUser();
+  const accountIds = user?.memberships.map((m) => m.account_id) ?? [];
+
   const supabase = await createClient();
-  const [{ data: events }, { data: tickets }] = await Promise.all([
-    supabase.from("events").select("*, accounts(name)").order("created_at", { ascending: false }),
-    supabase.from("tickets").select("event_id, status"),
-  ]);
+  let eventsQuery = supabase.from("events").select("*, accounts(name)").order("created_at", { ascending: false });
+  if (!user?.isSuperAdmin) eventsQuery = eventsQuery.in("account_id", accountIds);
+  const { data: events } = await eventsQuery;
+
+  const eventIds = (events ?? []).map((e) => e.id);
+  const { data: tickets } =
+    eventIds.length > 0
+      ? await supabase.from("tickets").select("event_id, status").in("event_id", eventIds)
+      : { data: [] };
 
   const issuedByEvent = new Map<string, number>();
   for (const t of tickets ?? []) {

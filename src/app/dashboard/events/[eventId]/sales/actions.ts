@@ -11,7 +11,7 @@ export async function recordHandover(
   formData: FormData
 ): Promise<{ error: string | null }> {
   const ctx = await getEventContext(eventId);
-  if (!ctx || !ctx.canManageParticipants) return { error: "Not authorized." };
+  if (!ctx || !ctx.isOwner) return { error: "Not authorized." };
   if (ctx.event.status !== "active") return { error: "Event is closed." };
 
   const user = await getCurrentUser();
@@ -22,7 +22,7 @@ export async function recordHandover(
   const recipientName = String(formData.get("recipient_name") ?? "").trim() || null;
   const note = String(formData.get("note") ?? "").trim() || null;
   const staffUserIdRaw = String(formData.get("staff_user_id") ?? "");
-  const staffUserId = ctx.isOwner && staffUserIdRaw ? staffUserIdRaw : user.id;
+  const staffUserId = staffUserIdRaw || user.id;
 
   if (!Number.isFinite(amount) || amount <= 0) {
     return { error: "Amount must be a positive number." };

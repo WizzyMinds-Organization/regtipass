@@ -3,27 +3,33 @@
 import { useState } from "react";
 import { KeyRound, TriangleAlert, X } from "lucide-react";
 import { resetOwnerPassword } from "@/app/admin/actions";
+import { PasswordInput } from "@/components/password-input";
 
 export function ResetOwnerPasswordButton({ accountId, ownerEmail }: { accountId: string; ownerEmail: string }) {
   const [open, setOpen] = useState(false);
   const [confirmText, setConfirmText] = useState("");
+  const [password, setPassword] = useState("");
   const [pending, setPending] = useState(false);
-  const [result, setResult] = useState<{ error: string | null; password?: string; email?: string } | null>(null);
+  const [done, setDone] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const matches = confirmText.trim().toLowerCase() === ownerEmail.trim().toLowerCase();
 
   const close = () => {
     setOpen(false);
     setConfirmText("");
-    setResult(null);
+    setPassword("");
+    setDone(false);
+    setError(null);
   };
 
   const confirmReset = async () => {
-    if (!matches) return;
+    if (!matches || password.length < 8) return;
     setPending(true);
-    const res = await resetOwnerPassword(accountId);
+    const res = await resetOwnerPassword(accountId, password);
     setPending(false);
-    setResult(res);
+    if (res.error) setError(res.error);
+    else setDone(true);
   };
 
   return (
@@ -50,13 +56,10 @@ export function ResetOwnerPasswordButton({ accountId, ownerEmail }: { accountId:
               </button>
             </div>
 
-            {result?.password ? (
+            {done ? (
               <div className="mt-4 flex flex-col gap-3">
                 <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-                  New password set. Share these credentials (shown once):
-                  <div className="mt-1 break-all font-mono text-xs">
-                    {result.email} / {result.password}
-                  </div>
+                  Password updated for {ownerEmail}.
                 </div>
                 <button
                   onClick={close}
@@ -87,11 +90,21 @@ export function ResetOwnerPasswordButton({ accountId, ownerEmail }: { accountId:
                   />
                 </div>
 
-                {result?.error && <p className="text-sm text-red-600">{result.error}</p>}
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-zinc-600">New password</label>
+                  <PasswordInput
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    minLength={8}
+                    autoComplete="new-password"
+                  />
+                </div>
+
+                {error && <p className="text-sm text-red-600">{error}</p>}
 
                 <button
                   onClick={confirmReset}
-                  disabled={!matches || pending}
+                  disabled={!matches || password.length < 8 || pending}
                   className="self-start rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-zinc-300"
                 >
                   {pending ? "Resetting..." : "Reset password"}

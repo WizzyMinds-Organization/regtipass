@@ -11,7 +11,7 @@ export default async function FormAndTemplatesPage({
 }) {
   const { eventId } = await params;
   const ctx = await getEventContext(eventId);
-  if (!ctx || !ctx.isOwner) notFound();
+  if (!ctx || !ctx.canManageForm) notFound();
 
   const supabase = await createClient();
   const [{ data: fields }, { data: templates }] = await Promise.all([
@@ -29,11 +29,8 @@ export default async function FormAndTemplatesPage({
   const editable = ctx.event.status === "active";
 
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader
-        title="Form & templates"
-        subtitle="Set up what to collect from participants, then design the ticket."
-      />
+    <div className="flex flex-col">
+      <PageHeader title="Form & templates" compact />
       <DesignTabs eventId={eventId} fields={fields ?? []} templates={templatesWithUrls} editable={editable} />
     </div>
   );

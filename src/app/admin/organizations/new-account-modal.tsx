@@ -3,24 +3,22 @@
 import { useActionState, useEffect, useState } from "react";
 import { Plus, X } from "lucide-react";
 import { createAccount } from "@/app/admin/actions";
+import { PasswordInput } from "@/components/password-input";
 
 const initialState: Awaited<ReturnType<typeof createAccount>> = {
   error: null,
-  ownerPassword: undefined,
   ownerEmail: undefined,
+  created: false,
 };
 
 function NewAccountFormBody({ onDone }: { onDone: () => void }) {
   const [state, formAction, pending] = useActionState(createAccount, initialState);
 
-  if (state.ownerPassword) {
+  if (state.created) {
     return (
       <div className="mt-4 flex flex-col gap-3">
         <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-          Account created. Share these credentials with the owner (shown once):
-          <div className="mt-1 break-all font-mono text-xs">
-            {state.ownerEmail} / {state.ownerPassword}
-          </div>
+          Account created for {state.ownerEmail}.
         </div>
         <button
           onClick={onDone}
@@ -43,13 +41,25 @@ function NewAccountFormBody({ onDone }: { onDone: () => void }) {
         />
       </div>
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-zinc-600">Email</label>
+        <label className="text-xs font-medium text-zinc-600">Owner name</label>
+        <input
+          name="owner_name"
+          required
+          className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-orange-500"
+        />
+      </div>
+      <div className="flex flex-col gap-1">
+        <label className="text-xs font-medium text-zinc-600">Owner email</label>
         <input
           name="owner_email"
           type="email"
           required
           className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-orange-500"
         />
+      </div>
+      <div className="flex flex-col gap-1">
+        <label className="text-xs font-medium text-zinc-600">Owner password</label>
+        <PasswordInput name="owner_password" required minLength={8} autoComplete="new-password" />
       </div>
 
       {state.error && <p className="text-sm text-red-600">{state.error}</p>}

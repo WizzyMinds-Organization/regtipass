@@ -2,25 +2,27 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { Plus, X } from "lucide-react";
+import type { StaffRole } from "@/lib/supabase/types";
 import { inviteStaff } from "./actions";
+import { ROLE_DESCRIPTIONS, ROLE_LABELS } from "./roles";
+import { PasswordInput } from "@/components/password-input";
+
+const ROLE_ORDER: StaffRole[] = ["manager", "issuer", "checkin"];
 
 function InviteStaffFormBody({ eventId, onDone }: { eventId: string; onDone: () => void }) {
   const action = inviteStaff.bind(null, eventId);
   const initialState: Awaited<ReturnType<typeof action>> = {
     error: null,
-    password: undefined,
     email: undefined,
+    invited: false,
   };
   const [state, formAction, pending] = useActionState(action, initialState);
 
-  if (state.password) {
+  if (state.invited) {
     return (
       <div className="mt-4 flex flex-col gap-3">
         <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-          Staff account created. Share these credentials (shown once):
-          <div className="mt-1 break-all font-mono text-xs">
-            {state.email} / {state.password}
-          </div>
+          {state.email} invited.
         </div>
         <button
           onClick={onDone}
@@ -35,6 +37,14 @@ function InviteStaffFormBody({ eventId, onDone }: { eventId: string; onDone: () 
   return (
     <form action={formAction} className="mt-4 flex flex-col gap-3">
       <div className="flex flex-col gap-1">
+        <label className="text-xs font-medium text-zinc-600">Name</label>
+        <input
+          name="name"
+          required
+          className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-orange-500"
+        />
+      </div>
+      <div className="flex flex-col gap-1">
         <label className="text-xs font-medium text-zinc-600">Email</label>
         <input
           name="email"
@@ -43,13 +53,25 @@ function InviteStaffFormBody({ eventId, onDone }: { eventId: string; onDone: () 
           className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-orange-500"
         />
       </div>
-      <div className="flex gap-4">
-        <label className="flex items-center gap-2 text-sm text-zinc-700">
-          <input name="can_checkin" type="checkbox" /> Check-in staff
-        </label>
-        <label className="flex items-center gap-2 text-sm text-zinc-700">
-          <input name="can_manage_participants" type="checkbox" /> Participant staff
-        </label>
+      <div className="flex flex-col gap-1">
+        <label className="text-xs font-medium text-zinc-600">Password</label>
+        <PasswordInput name="password" minLength={8} autoComplete="new-password" />
+        <p className="text-[11px] text-zinc-400">Only used if this email doesn&apos;t already have an account.</p>
+      </div>
+      <div className="flex flex-col gap-2">
+        <label className="text-xs font-medium text-zinc-600">Role</label>
+        {ROLE_ORDER.map((role, i) => (
+          <label
+            key={role}
+            className="flex items-start gap-2.5 rounded-md border border-zinc-200 p-2.5 text-sm text-zinc-700 has-[:checked]:border-orange-400 has-[:checked]:bg-orange-50"
+          >
+            <input name="role" type="radio" value={role} defaultChecked={i === 0} className="mt-0.5" />
+            <span>
+              <span className="font-medium text-zinc-900">{ROLE_LABELS[role]}</span>
+              <span className="block text-xs text-zinc-500">{ROLE_DESCRIPTIONS[role]}</span>
+            </span>
+          </label>
+        ))}
       </div>
 
       {state.error && <p className="text-sm text-red-600">{state.error}</p>}

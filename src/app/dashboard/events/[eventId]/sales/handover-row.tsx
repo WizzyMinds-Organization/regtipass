@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import type { CashHandover } from "@/lib/supabase/types";
+import { ConfirmDialog, useConfirmDialog } from "@/components/confirm-dialog";
+import { useToast } from "@/components/toast";
 import { deleteHandover } from "./actions";
 
 const RECIPIENT_LABEL: Record<CashHandover["recipient_type"], string> = {
@@ -25,7 +26,8 @@ export function HandoverRow({
   canDelete: boolean;
 }) {
   const router = useRouter();
-  const [deleting, setDeleting] = useState(false);
+  const toast = useToast();
+  const dialog = useConfirmDialog();
 
   return (
     <tr className="border-t border-zinc-100">
@@ -42,18 +44,32 @@ export function HandoverRow({
       {canDelete && (
         <td className="px-5 py-2.5 text-right">
           <button
-            className="text-zinc-400 hover:text-red-600 disabled:opacity-50"
+            className="rounded-md p-1.5 text-zinc-400 hover:bg-red-50 hover:text-red-600"
             title="Remove handover"
-            disabled={deleting}
-            onClick={async () => {
-              if (!confirm("Remove this handover record?")) return;
-              setDeleting(true);
-              await deleteHandover(eventId, handover.id);
-              router.refresh();
-            }}
+            onClick={dialog.show}
           >
             <Trash2 className="h-4 w-4" />
           </button>
+
+          <ConfirmDialog
+            open={dialog.open}
+            pending={dialog.pending}
+            title="Remove handover"
+            message="Remove this handover record? This cannot be undone."
+            confirmLabel="Remove"
+            onCancel={dialog.hide}
+            onConfirm={async () => {
+              dialog.setPending(true);
+              try {
+                await deleteHandover(eventId, handover.id);
+                toast.success("Handover removed.");
+                router.refresh();
+              } catch (err) {
+                toast.error(err instanceof Error ? err.message : "Failed to remove handover.");
+              }
+              dialog.hide();
+            }}
+          />
         </td>
       )}
     </tr>

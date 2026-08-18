@@ -7,8 +7,10 @@ export interface EventNavConfig {
   eventName: string;
   eventStatus: "active" | "closed";
   isOwner: boolean;
+  canManageForm: boolean;
   canCheckin: boolean;
   canManageParticipants: boolean;
+  checkinOnly: boolean;
 }
 
 interface ShellState {

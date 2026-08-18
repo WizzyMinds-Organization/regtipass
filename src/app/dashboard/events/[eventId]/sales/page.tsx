@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Banknote, HandCoins, Plus, Ticket, Wallet } from "lucide-react";
 import { getEventContext } from "@/lib/event-context";
-import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { PageHeader } from "@/components/dashboard/page-header";
@@ -17,9 +16,8 @@ export default async function SalesPage({
 }) {
   const { eventId } = await params;
   const ctx = await getEventContext(eventId);
-  if (!ctx || !ctx.canManageParticipants) notFound();
+  if (!ctx || !ctx.isOwner) notFound();
 
-  const user = await getCurrentUser();
   const supabase = await createClient();
   const admin = createAdminClient();
 
@@ -32,13 +30,11 @@ export default async function SalesPage({
       .order("created_at", { ascending: false }),
     admin
       .from("account_users")
-      .select("user_id, is_owner, can_manage_participants")
+      .select("user_id, is_owner, role, name")
       .eq("account_id", ctx.event.account_id),
   ]);
 
-  const sellers = ctx.isOwner
-    ? (members ?? []).filter((m) => m.is_owner || m.can_manage_participants)
-    : (members ?? []).filter((m) => m.user_id === user?.id);
+  const sellers = (members ?? []).filter((m) => m.is_owner || m.role === "manager" || m.role === "issuer");
 
   const staffIds = sellers.map((m) => m.user_id);
   const emailById = new Map<string, string>();
@@ -49,6 +45,8 @@ export default async function SalesPage({
       .in("user_id", staffIds);
     for (const row of directoryRows ?? []) emailById.set(row.user_id, row.email);
   }
+  const nameById = new Map<string, string>();
+  for (const m of sellers) nameById.set(m.user_id, m.name || emailById.get(m.user_id) || m.user_id);
 
   const soldByStaff = new Map<string, { count: number; amount: number }>();
   for (const t of tickets ?? []) {
@@ -70,7 +68,7 @@ export default async function SalesPage({
       const handedOver = handedOverByStaff.get(m.user_id) ?? 0;
       return {
         userId: m.user_id,
-        email: emailById.get(m.user_id) ?? m.user_id,
+        email: nameById.get(m.user_id) ?? m.user_id,
         soldCount: sold.count,
         soldAmount: sold.amount,
         handedOver,
@@ -88,12 +86,8 @@ export default async function SalesPage({
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Ticket sales"
-        subtitle={
-          ctx.isOwner
-            ? "See who sold what and reconcile cash handed over to you, finance, or vendors."
-            : "Your ticket sales and the cash you've handed over so far."
-        }
+        title="Finance overview"
+        subtitle="See who sold what and reconcile cash handed over to you, finance, or vendors."
         action={
           editable && (
             <Link
@@ -108,16 +102,14 @@ export default async function SalesPage({
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatCard icon={Ticket} label={ctx.isOwner ? "Tickets sold" : "Your tickets sold"} value={totalTickets} color="orange" />
-        <StatCard icon={Wallet} label={ctx.isOwner ? "Total collected" : "You collected"} value={totalSold.toFixed(2)} color="blue" />
-        <StatCard icon={HandCoins} label={ctx.isOwner ? "Total handed over" : "You handed over"} value={totalHandedOver.toFixed(2)} color="amber" />
+        <StatCard icon={Ticket} label="Tickets sold" value={totalTickets} color="orange" />
+        <StatCard icon={Wallet} label="Total collected" value={totalSold.toFixed(2)} color="blue" />
+        <StatCard icon={HandCoins} label="Total handed over" value={totalHandedOver.toFixed(2)} color="amber" />
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white">
         <div className="border-b border-zinc-200 px-5 py-4">
-          <h3 className="text-sm font-semibold text-zinc-900">
-            {ctx.isOwner ? "By staff member" : "Your balance"}
-          </h3>
+          <h3 className="text-sm font-semibold text-zinc-900">By staff member</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[560px] text-sm">
@@ -172,7 +164,7 @@ export default async function SalesPage({
             <HandoverForm
               eventId={eventId}
               isOwner={ctx.isOwner}
-              staffOptions={sellers.map((m) => ({ userId: m.user_id, email: emailById.get(m.user_id) ?? m.user_id }))}
+              staffOptions={sellers.map((m) => ({ userId: m.user_id, email: nameById.get(m.user_id) ?? m.user_id }))}
             />
           )}
         </div>
@@ -185,7 +177,7 @@ export default async function SalesPage({
                 <th className="px-5 py-2.5 font-medium">Amount</th>
                 <th className="px-5 py-2.5 font-medium">Given to</th>
                 <th className="px-5 py-2.5 font-medium">Note</th>
-                {ctx.isOwner && <th className="px-5 py-2.5"></th>}
+                <th className="px-5 py-2.5"></th>
               </tr>
             </thead>
             <tbody>
@@ -194,13 +186,13 @@ export default async function SalesPage({
                   key={h.id}
                   eventId={eventId}
                   handover={h}
-                  email={emailById.get(h.staff_user_id) ?? h.staff_user_id}
-                  canDelete={ctx.isOwner}
+                  email={nameById.get(h.staff_user_id) ?? h.staff_user_id}
+                  canDelete
                 />
               ))}
               {(handovers ?? []).length === 0 && (
                 <tr>
-                  <td colSpan={ctx.isOwner ? 6 : 5} className="px-5 py-10 text-center text-zinc-400">
+                  <td colSpan={6} className="px-5 py-10 text-center text-zinc-400">
                     No handovers recorded yet.
                   </td>
                 </tr>

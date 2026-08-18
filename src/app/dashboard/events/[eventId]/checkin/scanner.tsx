@@ -5,7 +5,7 @@ import { BrowserQRCodeReader, IScannerControls } from "@zxing/browser";
 
 type CheckinResult = {
   result: "success" | "already_checked_in" | "invalid";
-  ticket_id: string;
+  ticket_id?: string;
   status: string | null;
   checked_in_at: string | null;
   participant_data: Record<string, string> | null;
@@ -37,7 +37,7 @@ export function CheckinScanner({ eventId }: { eventId: string }) {
         const res = await fetch("/api/checkin", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ticketId }),
+          body: JSON.stringify({ ticketId, eventId }),
         });
         const json = await res.json();
         if (!res.ok) {
@@ -147,7 +147,9 @@ export function CheckinScanner({ eventId }: { eventId: string }) {
                 }`}
               {lastResult.result === "invalid" && "Invalid ticket"}
             </p>
-            <p className="mt-1 font-mono text-xs text-zinc-500">{lastResult.ticket_id}</p>
+            {lastResult.ticket_id && (
+              <p className="mt-1 font-mono text-xs text-zinc-500">{lastResult.ticket_id}</p>
+            )}
             {lastResult.participant_data?.name && (
               <p className="mt-1 text-sm text-zinc-700">{lastResult.participant_data.name}</p>
             )}
