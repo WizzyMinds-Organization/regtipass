@@ -41,24 +41,27 @@ function getAdminClient() {
 }
 
 // Template artwork rarely changes (image_path is a fresh UUID per upload,
-// so a re-upload just gets a new cache entry) but was being re-downloaded
-// from Storage on every single render — the dominant cost when a booth
-// issues many tickets back-to-back off the same template. Cached per warm
-// server instance and can be pre-warmed via warmTemplateBackground() before
-// the ticket that needs it even exists yet.
+// so a re-upload just gets a new cache entry). Fetched via the bucket's
+// public CDN URL instead of the authenticated storage.download() API —
+// the "templates" bucket is already public (used elsewhere via
+// getPublicUrl), and the public path is served through Supabase's
+// Cloudflare CDN with real edge caching (confirmed: cf-cache-status HIT,
+// max-age=3600), unlike the authenticated download API which hits the
+// origin every time. That CDN cache is what actually survives cold
+// Lambda starts — an in-memory Map only helps within one warm instance,
+// and Vercel was hitting a fresh instance on nearly every request in
+// practice. Still checked first as a same-instance fast path on top.
 const MAX_CACHE_ENTRIES = 30;
 const backgroundCache = new Map<string, Buffer>();
 
-async function getTemplateBackground(
-  supabase: ReturnType<typeof createAdminClient>,
-  imagePath: string
-): Promise<Buffer | null> {
+async function getTemplateBackground(imagePath: string): Promise<Buffer | null> {
   const cached = backgroundCache.get(imagePath);
   if (cached) return cached;
 
-  const { data: fileData } = await supabase.storage.from("templates").download(imagePath);
-  if (!fileData) return null;
-  const buffer = Buffer.from(await fileData.arrayBuffer());
+  const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/templates/${imagePath}`;
+  const res = await fetch(url);
+  if (!res.ok) return null;
+  const buffer = Buffer.from(await res.arrayBuffer());
 
   if (backgroundCache.size >= MAX_CACHE_ENTRIES) {
     const oldestKey = backgroundCache.keys().next().value;
@@ -70,7 +73,7 @@ async function getTemplateBackground(
 
 export async function warmTemplateBackground(imagePath: string): Promise<void> {
   if (backgroundCache.has(imagePath)) return;
-  await getTemplateBackground(getAdminClient(), imagePath);
+  await getTemplateBackground(imagePath);
 }
 
 function canvasAlign(align: string): CanvasTextAlign {
@@ -97,7 +100,7 @@ export async function renderTicketPng(ticketId: string): Promise<Buffer | null> 
   ]);
   if (!template) return null;
 
-  const backgroundBuffer = await getTemplateBackground(adminClient, template.image_path);
+  const backgroundBuffer = await getTemplateBackground(template.image_path);
   if (!backgroundBuffer) return null;
 
   const participantData = ticket.participant_data as Record<string, string>;
