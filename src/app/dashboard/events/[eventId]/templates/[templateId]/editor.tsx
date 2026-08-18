@@ -232,6 +232,9 @@ export function TemplateEditor({
     // whatever's already there — typically a title or the first field.
     const qrSize = Math.round(Math.min(template.image_width, template.image_height) * 0.28);
     const margin = Math.round(template.image_width * 0.05);
+    const idFontSize = Math.min(28, Math.max(12, Math.round(template.image_height * 0.045)));
+    const idHeight = Math.round(idFontSize * 1.6);
+    const idWidth = Math.round(Math.min(template.image_width * 0.4, template.image_width - margin * 2));
     const defaults: Record<typeof kind, { width: number; height: number; font_size: number; x: number; y: number }> = {
       qr: {
         width: qrSize,
@@ -241,11 +244,11 @@ export function TemplateEditor({
         y: Math.max(margin, Math.round((template.image_height - qrSize) / 2)),
       },
       ticket_id: {
-        width: 200,
-        height: 24,
-        font_size: 14,
+        width: idWidth,
+        height: idHeight,
+        font_size: idFontSize,
         x: margin,
-        y: Math.max(margin, template.image_height - 44),
+        y: Math.max(margin, template.image_height - idHeight - margin),
       },
     };
     const id = `draft-${crypto.randomUUID()}`;
@@ -318,6 +321,12 @@ export function TemplateEditor({
             x: Math.max(0, Math.round(drag.origin.x + dx)),
             y: Math.max(0, Math.round(drag.origin.y + dy)),
           };
+        }
+        if (a.kind === "qr") {
+          // QR codes must stay square to stay scannable — resize both sides
+          // together off the diagonal drag distance instead of independently.
+          const size = Math.max(10, Math.round((drag.origin.width + dx + (drag.origin.height + dy)) / 2));
+          return { ...a, width: size, height: size };
         }
         return {
           ...a,
@@ -437,8 +446,16 @@ export function TemplateEditor({
   function anchorPreview(a: TemplateAnchor) {
     if (a.kind === "qr") {
       return qrDataUrl ? (
+        // draggable=false + pointer-events-none: <img> is natively draggable
+        // by the browser, which was hijacking the custom pointer-drag (the
+        // browser's own ghost-image drag) and made moving the QR anchor jump.
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={qrDataUrl} alt="QR preview" className="h-full w-full object-contain" />
+        <img
+          src={qrDataUrl}
+          alt="QR preview"
+          draggable={false}
+          className="pointer-events-none h-full w-full object-contain"
+        />
       ) : null;
     }
     const text = a.kind === "ticket_id" ? "TCKT-A1B2C3D4" : dummyValueFor(fields.find((f) => f.key === a.field_key));
