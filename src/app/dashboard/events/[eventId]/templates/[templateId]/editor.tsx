@@ -36,22 +36,38 @@ function touchDistance(touches: React.TouchList | TouchList) {
 
 // Fields toggled "show on ticket" from the Form page auto-get a placeholder
 // anchor here on first load, so there's nothing left to add manually.
-function withAutoAddedFields(anchors: TemplateAnchor[], fields: FormField[], templateId: string): TemplateAnchor[] {
+// Sized and stacked relative to the artwork (like the QR/ticket-ID
+// defaults below) instead of a fixed 200x24 at (20,20) — on a large
+// template that read as a cramped stack of tiny labels in one corner.
+function withAutoAddedFields(
+  anchors: TemplateAnchor[],
+  fields: FormField[],
+  templateId: string,
+  imageWidth: number,
+  imageHeight: number
+): TemplateAnchor[] {
   const missing = fields.filter(
     (f) => f.show_on_ticket && !anchors.some((a) => a.kind === "field" && a.field_key === f.key)
   );
   if (missing.length === 0) return anchors;
+
+  const margin = Math.round(imageWidth * 0.05);
+  const fontSize = Math.min(32, Math.max(14, Math.round(imageHeight * 0.05)));
+  const rowHeight = Math.round(fontSize * 1.9);
+  const width = Math.round(Math.min(imageWidth * 0.45, imageWidth - margin * 2));
+  const existingFieldCount = anchors.filter((a) => a.kind === "field").length;
+
   const additions: TemplateAnchor[] = missing.map((f, i) => ({
     id: `draft-${crypto.randomUUID()}`,
     template_id: templateId,
     kind: "field",
     field_key: f.key,
-    x: 20,
-    y: 20 + (anchors.length + i) * 32,
-    width: 200,
-    height: 24,
+    x: margin,
+    y: margin + (existingFieldCount + i) * rowHeight,
+    width,
+    height: rowHeight - Math.round(rowHeight * 0.2),
     font: "",
-    font_size: 16,
+    font_size: fontSize,
     align: "left",
     color: "#000000",
     visible: true,
@@ -75,7 +91,9 @@ export function TemplateEditor({
   fields: FormField[];
   editable: boolean;
 }) {
-  const [anchors, setAnchors] = useState<TemplateAnchor[]>(() => withAutoAddedFields(initialAnchors, fields, template.id));
+  const [anchors, setAnchors] = useState<TemplateAnchor[]>(() =>
+    withAutoAddedFields(initialAnchors, fields, template.id, template.image_width, template.image_height)
+  );
   const [savedAnchors, setSavedAnchors] = useState(initialAnchors);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [zoom, setZoom] = useState(1);
