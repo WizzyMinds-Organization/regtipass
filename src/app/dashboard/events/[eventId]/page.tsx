@@ -20,7 +20,7 @@ export default async function EventOverview({
   if (ctx.checkinOnly) redirect(`/dashboard/events/${eventId}/checkin`);
 
   const supabase = await createClient();
-  const [{ data: fields }, { data: tickets }] = await Promise.all([
+  const [{ data: fields }, { data: tickets }, { data: statsRow }] = await Promise.all([
     supabase.from("form_fields").select("*").eq("event_id", eventId).order("sort_order"),
     supabase
       .from("tickets")
@@ -28,15 +28,17 @@ export default async function EventOverview({
       .eq("event_id", eventId)
       .order("created_at", { ascending: false })
       .limit(200),
+    supabase.rpc("event_ticket_stats", { p_event_id: eventId }).single(),
   ]);
 
   const allFields = fields ?? [];
   const nameField =
     allFields.find((f) => /name/i.test(f.key) || /name/i.test(f.label)) ?? allFields[0] ?? null;
 
-  const issued = tickets?.length ?? 0;
-  const checkedIn = (tickets ?? []).filter((t) => t.status === "checked_in").length;
-  const totalCollected = (tickets ?? []).reduce((sum, t) => sum + Number(t.amount_collected), 0);
+  const stats = statsRow as { issued: number; checked_in: number; total_collected: number } | null;
+  const issued = stats?.issued ?? 0;
+  const checkedIn = stats?.checked_in ?? 0;
+  const totalCollected = Number(stats?.total_collected ?? 0);
 
   const sellerIds = [...new Set((tickets ?? []).map((t) => t.issued_by).filter((id): id is string => !!id))];
   const nameById = new Map<string, string>();

@@ -52,7 +52,11 @@ export async function deleteHandover(eventId: string, handoverId: string) {
   if (!ctx || !ctx.isOwner) throw new Error("Not authorized.");
 
   const supabase = await createClient();
-  const { error } = await supabase.from("cash_handovers").delete().eq("id", handoverId);
+  const { error } = await supabase
+    .from("cash_handovers")
+    .delete()
+    .eq("id", handoverId)
+    .eq("event_id", eventId);
   if (error) throw new Error(error.message);
   revalidatePath(`/dashboard/events/${eventId}/sales`);
 }

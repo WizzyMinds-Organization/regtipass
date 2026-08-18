@@ -11,26 +11,29 @@ export async function GET(
   if (!ctx || !ctx.canCheckin) return NextResponse.json({ error: "Not found." }, { status: 404 });
 
   const supabase = await createClient();
-  const [{ data: fields }, { data: tickets }] = await Promise.all([
-    supabase.from("form_fields").select("key, label").eq("event_id", eventId).order("sort_order"),
-    supabase
-      .from("tickets")
-      .select("id, participant_data, status")
-      .eq("event_id", eventId)
-      .order("created_at", { ascending: false }),
-  ]);
+  const { data: fields } = await supabase
+    .from("form_fields")
+    .select("key, label")
+    .eq("event_id", eventId)
+    .order("sort_order");
 
   const allFields = fields ?? [];
   const nameField = allFields.find((f) => /name/i.test(f.key) || /name/i.test(f.label)) ?? allFields[0] ?? null;
 
-  const guests = (tickets ?? []).map((t) => {
-    const data = (t.participant_data as Record<string, string> | null) ?? {};
-    return {
-      id: ctx.checkinOnly ? undefined : t.id,
-      name: (nameField && data[nameField.key]) || "—",
-      status: t.status as "issued" | "checked_in",
-    };
-  });
+  // Pull only the one participant_data field the guest list actually shows,
+  // instead of the whole jsonb blob for every ticket on every 5s poll.
+  const selectClause = nameField ? `id, status, name:participant_data->>${nameField.key}` : "id, status";
+  const { data: tickets } = await supabase
+    .from("tickets")
+    .select<string, { id: string; status: string; name: string | null }>(selectClause)
+    .eq("event_id", eventId)
+    .order("created_at", { ascending: false });
+
+  const guests = (tickets ?? []).map((t) => ({
+    id: ctx.checkinOnly ? undefined : t.id,
+    name: t.name || "—",
+    status: t.status as "issued" | "checked_in",
+  }));
 
   const checkedIn = guests.filter((g) => g.status === "checked_in").length;
 

@@ -93,6 +93,7 @@ export async function removeStaff(eventId: string, accountUserId: string) {
     .from("account_users")
     .delete()
     .eq("id", accountUserId)
+    .eq("account_id", ctx.event.account_id)
     .eq("is_owner", false);
   if (error) throw new Error(error.message);
   revalidatePath(`/dashboard/events/${eventId}/staff`);
@@ -134,6 +135,7 @@ export async function updateStaffRole(eventId: string, accountUserId: string, ro
     .from("account_users")
     .update({ role })
     .eq("id", accountUserId)
+    .eq("account_id", ctx.event.account_id)
     .eq("is_owner", false);
   if (error) throw new Error(error.message);
   revalidatePath(`/dashboard/events/${eventId}/staff`);
