@@ -57,3 +57,15 @@ export async function issueTicket(
 
   return { error: "Could not generate a unique ticket ID, please try again." };
 }
+
+export async function deleteTicket(eventId: string, ticketId: string): Promise<{ error: string | null }> {
+  const ctx = await getEventContext(eventId);
+  if (!ctx || !ctx.canManageParticipants) return { error: "Not authorized." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("tickets").delete().eq("id", ticketId).eq("event_id", eventId);
+  if (error) return { error: error.message };
+
+  revalidatePath(`/dashboard/events/${eventId}`);
+  return { error: null };
+}

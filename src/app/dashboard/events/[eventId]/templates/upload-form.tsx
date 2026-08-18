@@ -1,14 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, X } from "lucide-react";
+import { Plus, Upload, X } from "lucide-react";
 
 export function UploadTemplateForm({ eventId }: { eventId: string }) {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fileName, setFileName] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -89,12 +91,23 @@ export function UploadTemplateForm({ eventId }: { eventId: string }) {
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-medium text-zinc-600">Artwork (PNG/JPEG/WebP)</label>
                 <input
+                  ref={fileInputRef}
                   name="file"
                   type="file"
                   accept="image/png,image/jpeg,image/webp"
                   required
-                  className="text-sm"
+                  className="hidden"
+                  onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
                 />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="inline-flex items-center gap-1.5 self-start rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+                >
+                  <Upload className="h-4 w-4" />
+                  Choose file
+                </button>
+                {fileName && <p className="truncate text-xs text-zinc-500">{fileName}</p>}
               </div>
 
               {error && <p className="text-sm text-red-600">{error}</p>}

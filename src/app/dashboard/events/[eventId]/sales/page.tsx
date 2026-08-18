@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { Banknote, HandCoins, Ticket, Wallet } from "lucide-react";
+import Link from "next/link";
+import { Banknote, HandCoins, Plus, Ticket, Wallet } from "lucide-react";
 import { getEventContext } from "@/lib/event-context";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -87,11 +88,22 @@ export default async function SalesPage({
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Sales & handovers"
+        title="Ticket sales"
         subtitle={
           ctx.isOwner
             ? "See who sold what and reconcile cash handed over to you, finance, or vendors."
             : "Your ticket sales and the cash you've handed over so far."
+        }
+        action={
+          editable && (
+            <Link
+              href={`/dashboard/events/${eventId}/issue`}
+              className="inline-flex items-center gap-1.5 rounded-md bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700"
+            >
+              <Plus className="h-4 w-4" />
+              Issue ticket
+            </Link>
+          )
         }
       />
 

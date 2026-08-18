@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
+import { DeleteTicketButton } from "./delete-ticket-button";
 
 export default async function EventOverview({
   params,
@@ -67,34 +68,41 @@ export default async function EventOverview({
               <th className="px-5 py-2.5 font-medium">Participant</th>
               <th className="px-5 py-2.5 font-medium">Sold by</th>
               <th className="px-5 py-2.5 font-medium">Status</th>
+              {ctx.canManageParticipants && <th className="px-5 py-2.5"></th>}
             </tr>
           </thead>
           <tbody>
-            {(tickets ?? []).map((t) => (
-              <tr key={t.id} className="border-t border-zinc-100">
-                <td className="px-5 py-2.5 font-mono text-xs text-zinc-500">{t.id}</td>
-                <td className="px-5 py-2.5 text-zinc-900">
-                  {(t.participant_data as Record<string, string>)?.name ?? "—"}
-                </td>
-                <td className="px-5 py-2.5 text-zinc-600">
-                  {t.issued_by ? emailById.get(t.issued_by) ?? "—" : "—"}
-                </td>
-                <td className="px-5 py-2.5">
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                      t.status === "checked_in"
-                        ? "bg-blue-100 text-blue-700"
-                        : "bg-zinc-100 text-zinc-600"
-                    }`}
-                  >
-                    {t.status === "checked_in" ? "Checked in" : "Issued"}
-                  </span>
-                </td>
-              </tr>
-            ))}
+            {(tickets ?? []).map((t) => {
+              const participantName = (t.participant_data as Record<string, string>)?.name ?? "—";
+              return (
+                <tr key={t.id} className="border-t border-zinc-100">
+                  <td className="px-5 py-2.5 font-mono text-xs text-zinc-500">{t.id}</td>
+                  <td className="px-5 py-2.5 text-zinc-900">{participantName}</td>
+                  <td className="px-5 py-2.5 text-zinc-600">
+                    {t.issued_by ? emailById.get(t.issued_by) ?? "—" : "—"}
+                  </td>
+                  <td className="px-5 py-2.5">
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                        t.status === "checked_in"
+                          ? "bg-blue-100 text-blue-700"
+                          : "bg-zinc-100 text-zinc-600"
+                      }`}
+                    >
+                      {t.status === "checked_in" ? "Checked in" : "Issued"}
+                    </span>
+                  </td>
+                  {ctx.canManageParticipants && (
+                    <td className="px-5 py-2.5 text-right">
+                      <DeleteTicketButton eventId={eventId} ticketId={t.id} participantName={participantName} />
+                    </td>
+                  )}
+                </tr>
+              );
+            })}
             {(tickets ?? []).length === 0 && (
               <tr>
-                <td colSpan={4} className="px-5 py-10 text-center text-zinc-400">
+                <td colSpan={5} className="px-5 py-10 text-center text-zinc-400">
                   No tickets issued yet.
                 </td>
               </tr>

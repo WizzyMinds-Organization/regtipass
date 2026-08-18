@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Trash2 } from "lucide-react";
 import type { CashHandover } from "@/lib/supabase/types";
 import { deleteHandover } from "./actions";
 
@@ -23,6 +25,7 @@ export function HandoverRow({
   canDelete: boolean;
 }) {
   const router = useRouter();
+  const [deleting, setDeleting] = useState(false);
 
   return (
     <tr className="border-t border-zinc-100">
@@ -39,14 +42,17 @@ export function HandoverRow({
       {canDelete && (
         <td className="px-5 py-2.5 text-right">
           <button
-            className="text-xs text-red-600 hover:underline"
+            className="text-zinc-400 hover:text-red-600 disabled:opacity-50"
+            title="Remove handover"
+            disabled={deleting}
             onClick={async () => {
               if (!confirm("Remove this handover record?")) return;
+              setDeleting(true);
               await deleteHandover(eventId, handover.id);
               router.refresh();
             }}
           >
-            Remove
+            <Trash2 className="h-4 w-4" />
           </button>
         </td>
       )}

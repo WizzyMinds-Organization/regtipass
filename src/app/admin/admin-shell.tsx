@@ -3,9 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Building2, KeyRound, LayoutDashboard, LogOut, Menu, Search, ShieldCheck, X } from "lucide-react";
+import { Building2, LayoutDashboard, LogOut, Menu, ShieldCheck, X } from "lucide-react";
 import { signOut } from "@/app/login/actions";
 import { LogoMark } from "@/components/logo";
+import { ProfileMenu } from "@/components/profile-menu";
 
 const navItems = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard },
@@ -21,7 +22,6 @@ export function AdminShell({
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
-  const initials = (userEmail ?? "?").slice(0, 1).toUpperCase();
 
   return (
     <div className="flex min-h-screen bg-zinc-50">
@@ -80,15 +80,6 @@ export function AdminShell({
           Super admin
         </div>
 
-        <Link
-          href="/account"
-          onClick={() => setMobileOpen(false)}
-          className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
-        >
-          <KeyRound className="h-4 w-4 shrink-0 text-zinc-400" />
-          Change password
-        </Link>
-
         <form action={signOut}>
           <button className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900">
             <LogOut className="h-4 w-4 shrink-0 text-zinc-400" />
@@ -99,27 +90,15 @@ export function AdminShell({
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-zinc-200 bg-white px-4 sm:px-6">
-          <div className="flex min-w-0 items-center gap-3">
-            <button
-              onClick={() => setMobileOpen(true)}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-zinc-500 hover:bg-zinc-100 lg:hidden"
-            >
-              <Menu className="h-5 w-5" />
-            </button>
-            <div className="hidden items-center gap-2 rounded-lg bg-zinc-100 px-3 py-2 text-sm text-zinc-400 sm:flex sm:w-56 lg:w-72">
-              <Search className="h-4 w-4 shrink-0" />
-              <span className="truncate">Search…</span>
-            </div>
-          </div>
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-zinc-500 hover:bg-zinc-100 lg:hidden"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+          <div className="flex-1" />
 
-          <div className="flex shrink-0 items-center gap-2.5">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-xs font-semibold text-white">
-              {initials}
-            </span>
-            <span className="hidden max-w-[200px] truncate text-sm font-medium text-zinc-700 md:inline">
-              {userEmail}
-            </span>
-          </div>
+          <ProfileMenu email={userEmail} manageHref="/admin/organizations" manageLabel="Manage organizations" />
         </header>
 
         <main className="flex-1 px-4 py-5 sm:px-6 sm:py-6">{children}</main>

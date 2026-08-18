@@ -27,7 +27,7 @@ export default async function TemplateEditorPage({
 
   return (
     <div className="flex flex-col gap-4">
-      <Link href={`/dashboard/events/${eventId}/templates`} className="text-sm text-zinc-500 hover:underline">
+      <Link href={`/dashboard/events/${eventId}/form?tab=templates`} className="text-sm text-zinc-500 hover:underline">
         ← Templates
       </Link>
       <div className="flex flex-wrap items-center justify-between gap-3">

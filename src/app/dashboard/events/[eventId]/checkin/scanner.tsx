@@ -19,35 +19,42 @@ export function CheckinScanner({ eventId }: { eventId: string }) {
   const [lastResult, setLastResult] = useState<CheckinResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [counts, setCounts] = useState<{ issued: number; checkedIn: number } | null>(null);
-
-  const submit = useCallback(async (ticketId: string) => {
-    const now = Date.now();
-    if (lastScanRef.current.id === ticketId && now - lastScanRef.current.at < 4000) return;
-    lastScanRef.current = { id: ticketId, at: now };
-
-    try {
-      const res = await fetch("/api/checkin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ticketId }),
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        setError(json.error ?? "Check-in failed.");
-        return;
-      }
-      setError(null);
-      setLastResult(json);
-      refreshCounts();
-    } catch {
-      setError("Network error.");
-    }
-  }, []);
+  const [checkingIn, setCheckingIn] = useState(false);
 
   const refreshCounts = useCallback(async () => {
     const res = await fetch(`/api/events/${eventId}/counts`);
     if (res.ok) setCounts(await res.json());
   }, [eventId]);
+
+  const submit = useCallback(
+    async (ticketId: string) => {
+      const now = Date.now();
+      if (lastScanRef.current.id === ticketId && now - lastScanRef.current.at < 4000) return;
+      lastScanRef.current = { id: ticketId, at: now };
+
+      setCheckingIn(true);
+      try {
+        const res = await fetch("/api/checkin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ticketId }),
+        });
+        const json = await res.json();
+        if (!res.ok) {
+          setError(json.error ?? "Check-in failed.");
+          return;
+        }
+        setError(null);
+        setLastResult(json);
+        refreshCounts();
+      } catch {
+        setError("Network error.");
+      } finally {
+        setCheckingIn(false);
+      }
+    },
+    [refreshCounts]
+  );
 
   useEffect(() => {
     refreshCounts();
@@ -95,10 +102,14 @@ export function CheckinScanner({ eventId }: { eventId: string }) {
             value={manualId}
             onChange={(e) => setManualId(e.target.value)}
             placeholder="Type ticket ID"
-            className="flex-1 rounded-md border border-zinc-300 px-3 py-2 text-sm font-mono"
+            disabled={checkingIn}
+            className="flex-1 rounded-md border border-zinc-300 px-3 py-2 text-sm font-mono disabled:bg-zinc-50"
           />
-          <button className="rounded-md bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700">
-            Check in
+          <button
+            disabled={checkingIn}
+            className="rounded-md bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 disabled:opacity-50"
+          >
+            {checkingIn ? "Checking in..." : "Check in"}
           </button>
         </form>
 

@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { setAccountStatus } from "@/app/admin/actions";
 import { NewEventModal } from "./new-event-modal";
 import { ResetOwnerPasswordButton } from "./reset-owner-password-button";
+import { DeleteEventButton } from "./delete-event-button";
 
 export default async function AccountDetail({
   params,
@@ -113,13 +114,16 @@ export default async function AccountDetail({
                 </td>
                 <td className="px-4 py-3 text-zinc-600">{e.ticket_quota}</td>
                 <td className="px-4 py-3 text-right">
-                  <Link
-                    href={`/admin/events/${e.id}`}
-                    title="View event"
-                    className="inline-flex items-center justify-center rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-900"
-                  >
-                    <ArrowUpRight className="h-4 w-4" />
-                  </Link>
+                  <div className="flex items-center justify-end gap-3">
+                    <DeleteEventButton eventId={e.id} eventName={e.name} />
+                    <Link
+                      href={`/admin/events/${e.id}`}
+                      title="View event"
+                      className="inline-flex items-center justify-center rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-900"
+                    >
+                      <ArrowUpRight className="h-4 w-4" />
+                    </Link>
+                  </div>
                 </td>
               </tr>
             ))}

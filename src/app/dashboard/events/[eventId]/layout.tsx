@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getEventContext } from "@/lib/event-context";
 import { EventNavSetter } from "@/components/dashboard/event-nav-setter";
+import { TrackLastEvent } from "@/components/dashboard/track-last-event";
 
 export default async function EventLayout({
   children,
@@ -17,6 +18,7 @@ export default async function EventLayout({
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6">
+      <TrackLastEvent eventId={eventId} />
       <EventNavSetter
         eventId={eventId}
         eventName={event.name}

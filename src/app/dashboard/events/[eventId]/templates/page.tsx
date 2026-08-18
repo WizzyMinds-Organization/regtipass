@@ -1,61 +1,10 @@
-import { notFound } from "next/navigation";
-import Link from "next/link";
-import { getEventContext } from "@/lib/event-context";
-import { createClient } from "@/lib/supabase/server";
-import { PageHeader } from "@/components/dashboard/page-header";
-import { UploadTemplateForm } from "./upload-form";
-import { DeleteTemplateButton } from "./delete-button";
+import { redirect } from "next/navigation";
 
-export default async function TemplatesPage({
+export default async function TemplatesRedirect({
   params,
 }: {
   params: Promise<{ eventId: string }>;
 }) {
   const { eventId } = await params;
-  const ctx = await getEventContext(eventId);
-  if (!ctx || !ctx.isOwner) notFound();
-
-  const supabase = await createClient();
-  const { data: templates } = await supabase
-    .from("templates")
-    .select("*")
-    .eq("event_id", eventId)
-    .order("created_at", { ascending: false });
-
-  const withUrls = (templates ?? []).map((t) => ({
-    ...t,
-    url: supabase.storage.from("templates").getPublicUrl(t.image_path).data.publicUrl,
-  }));
-
-  const editable = ctx.event.status === "active";
-
-  return (
-    <div className="flex flex-col gap-6">
-      <PageHeader
-        title="Ticket templates"
-        subtitle="Upload artwork for each ticket tier, then place the QR code, printed ticket ID, and participant field anchors on top of it."
-        action={editable && <UploadTemplateForm eventId={eventId} />}
-      />
-
-      <div className="grid gap-4 sm:grid-cols-3">
-        {withUrls.map((t) => (
-          <Link
-            key={t.id}
-            href={`/dashboard/events/${eventId}/templates/${t.id}`}
-            className="group overflow-hidden rounded-2xl border border-zinc-200 bg-white hover:border-zinc-400"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={t.url} alt={t.name} className="aspect-[3/2] w-full object-cover" />
-            <div className="flex items-center justify-between p-3">
-              <div>
-                <span className="text-sm font-medium text-zinc-900">{t.name}</span>
-                <p className="text-xs text-zinc-500">{t.price > 0 ? t.price : "Free"}</p>
-              </div>
-              {editable && <DeleteTemplateButton eventId={eventId} templateId={t.id} />}
-            </div>
-          </Link>
-        ))}
-      </div>
-    </div>
-  );
+  redirect(`/dashboard/events/${eventId}/form?tab=templates`);
 }

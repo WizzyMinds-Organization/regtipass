@@ -6,15 +6,10 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   ListChecks,
-  Palette,
-  Ticket,
   ScanLine,
   Users,
   Wallet,
-  ChevronLeft,
-  KeyRound,
   LogOut,
-  Search,
   Bell,
   Menu,
   X,
@@ -22,6 +17,7 @@ import {
 import { useShell } from "./shell-context";
 import { signOut } from "@/app/login/actions";
 import { LogoMark } from "@/components/logo";
+import { ProfileMenu } from "@/components/profile-menu";
 
 function Logo() {
   return (
@@ -89,7 +85,6 @@ export function DashboardShell({
   }
 
   const insideEvent = eventNav && pathname.includes(`/dashboard/events/${eventNav.eventId}`);
-  const initials = (userEmail ?? "?").slice(0, 1).toUpperCase();
 
   const closeMobile = () => setMobileOpen(false);
 
@@ -121,14 +116,6 @@ export function DashboardShell({
         <nav className="mt-6 flex flex-1 flex-col overflow-y-auto">
           {insideEvent ? (
             <>
-              <Link
-                href="/dashboard"
-                className="mb-2 flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
-              >
-                <ChevronLeft className="h-4 w-4" />
-                All events
-              </Link>
-
               <div className="rounded-lg bg-zinc-50 px-3 py-2">
                 <p className="truncate text-sm font-semibold text-zinc-900">{eventNav.eventName}</p>
                 <span
@@ -154,27 +141,9 @@ export function DashboardShell({
                 {eventNav.isOwner && (
                   <NavLink
                     href={`/dashboard/events/${eventNav.eventId}/form`}
-                    label="Form"
+                    label="Form & templates"
                     icon={ListChecks}
-                    active={pathname.endsWith("/form")}
-                    onClick={closeMobile}
-                  />
-                )}
-                {eventNav.isOwner && (
-                  <NavLink
-                    href={`/dashboard/events/${eventNav.eventId}/templates`}
-                    label="Templates"
-                    icon={Palette}
-                    active={pathname.includes("/templates")}
-                    onClick={closeMobile}
-                  />
-                )}
-                {eventNav.canManageParticipants && (
-                  <NavLink
-                    href={`/dashboard/events/${eventNav.eventId}/issue`}
-                    label="Issue tickets"
-                    icon={Ticket}
-                    active={pathname.endsWith("/issue")}
+                    active={pathname.endsWith("/form") || pathname.includes("/templates")}
                     onClick={closeMobile}
                   />
                 )}
@@ -190,9 +159,9 @@ export function DashboardShell({
                 {eventNav.canManageParticipants && (
                   <NavLink
                     href={`/dashboard/events/${eventNav.eventId}/sales`}
-                    label="Sales"
+                    label="Ticket sales"
                     icon={Wallet}
-                    active={pathname.endsWith("/sales")}
+                    active={pathname.endsWith("/sales") || pathname.endsWith("/issue")}
                     onClick={closeMobile}
                   />
                 )}
@@ -254,15 +223,6 @@ export function DashboardShell({
           )}
         </nav>
 
-        <Link
-          href="/account"
-          onClick={closeMobile}
-          className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
-        >
-          <KeyRound className="h-4 w-4 shrink-0 text-zinc-400" />
-          Change password
-        </Link>
-
         <form action={signOut}>
           <button className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900">
             <LogOut className="h-4 w-4 shrink-0 text-zinc-400" />
@@ -273,31 +233,18 @@ export function DashboardShell({
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-zinc-200 bg-white px-4 sm:px-6">
-          <div className="flex min-w-0 items-center gap-3">
-            <button
-              onClick={() => setMobileOpen(true)}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-zinc-500 hover:bg-zinc-100 lg:hidden"
-            >
-              <Menu className="h-5 w-5" />
-            </button>
-            <div className="hidden items-center gap-2 rounded-lg bg-zinc-100 px-3 py-2 text-sm text-zinc-400 sm:flex sm:w-56 lg:w-72">
-              <Search className="h-4 w-4 shrink-0" />
-              <span className="truncate">Search…</span>
-            </div>
-          </div>
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-zinc-500 hover:bg-zinc-100 lg:hidden"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
 
-          <div className="flex shrink-0 items-center gap-2 sm:gap-4">
+          <div className="flex flex-1 shrink-0 items-center justify-end gap-2 sm:gap-4">
             <button className="hidden h-9 w-9 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 sm:flex">
               <Bell className="h-4 w-4" />
             </button>
-            <div className="flex items-center gap-2.5">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-xs font-semibold text-white">
-                {initials}
-              </span>
-              <span className="hidden max-w-[160px] truncate text-sm font-medium text-zinc-700 md:inline">
-                {userEmail}
-              </span>
-            </div>
+            <ProfileMenu email={userEmail} manageHref="/dashboard" manageLabel="All events" />
           </div>
         </header>
 

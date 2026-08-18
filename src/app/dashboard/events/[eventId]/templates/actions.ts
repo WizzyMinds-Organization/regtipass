@@ -3,7 +3,19 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getEventContext } from "@/lib/event-context";
-import type { AnchorKind } from "@/lib/supabase/types";
+import type { AnchorKind, TemplateAnchor } from "@/lib/supabase/types";
+
+type AnchorPatch = Partial<{
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  font: string;
+  font_size: number;
+  align: "left" | "center" | "right";
+  color: string;
+  visible: boolean;
+}>;
 
 async function requireOwner(eventId: string) {
   const ctx = await getEventContext(eventId);
@@ -35,7 +47,7 @@ export async function addAnchor(
   templateId: string,
   kind: AnchorKind,
   fieldKey: string | null
-) {
+): Promise<TemplateAnchor> {
   await requireOwner(eventId);
   const supabase = await createClient();
 
@@ -45,40 +57,21 @@ export async function addAnchor(
     field: { width: 200, height: 24, font_size: 16 },
   };
 
-  const { error } = await supabase.from("template_anchors").insert({
-    template_id: templateId,
-    kind,
-    field_key: fieldKey,
-    x: 20,
-    y: 20,
-    ...defaults[kind],
-  });
+  const { data, error } = await supabase
+    .from("template_anchors")
+    .insert({
+      template_id: templateId,
+      kind,
+      field_key: fieldKey,
+      x: 20,
+      y: 20,
+      ...defaults[kind],
+    })
+    .select()
+    .single();
 
-  if (error) throw new Error(error.message);
-  revalidatePath(`/dashboard/events/${eventId}/templates/${templateId}`);
-}
-
-export async function updateAnchor(
-  eventId: string,
-  templateId: string,
-  anchorId: string,
-  patch: Partial<{
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    font: string;
-    font_size: number;
-    align: "left" | "center" | "right";
-    color: string;
-    visible: boolean;
-  }>
-) {
-  await requireOwner(eventId);
-  const supabase = await createClient();
-  const { error } = await supabase.from("template_anchors").update(patch).eq("id", anchorId);
-  if (error) throw new Error(error.message);
-  revalidatePath(`/dashboard/events/${eventId}/templates/${templateId}`);
+  if (error || !data) throw new Error(error?.message ?? "Failed to add anchor.");
+  return data;
 }
 
 export async function deleteAnchor(eventId: string, templateId: string, anchorId: string) {
@@ -86,5 +79,27 @@ export async function deleteAnchor(eventId: string, templateId: string, anchorId
   const supabase = await createClient();
   const { error } = await supabase.from("template_anchors").delete().eq("id", anchorId);
   if (error) throw new Error(error.message);
+}
+
+/**
+ * Persists all locally-edited anchors in one batch, called only when the
+ * user clicks Save — not on every drag/keystroke — to avoid a server round
+ * trip per micro-edit.
+ */
+export async function saveAnchors(
+  eventId: string,
+  templateId: string,
+  updates: { id: string; patch: AnchorPatch }[]
+) {
+  await requireOwner(eventId);
+  if (updates.length === 0) return;
+  const supabase = await createClient();
+
+  const results = await Promise.all(
+    updates.map(({ id, patch }) => supabase.from("template_anchors").update(patch).eq("id", id))
+  );
+  const failed = results.find((r) => r.error);
+  if (failed?.error) throw new Error(failed.error.message);
+
   revalidatePath(`/dashboard/events/${eventId}/templates/${templateId}`);
 }

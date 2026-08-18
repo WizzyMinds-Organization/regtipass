@@ -158,6 +158,46 @@ export async function closeEvent(eventId: string) {
   revalidatePath(`/admin/events/${eventId}`);
 }
 
+export async function deleteEvent(eventId: string): Promise<{ error: string | null }> {
+  await requireSuperAdmin();
+  const admin = createAdminClient();
+
+  const { data: templates } = await admin.from("templates").select("id").eq("event_id", eventId);
+  const templateIds = (templates ?? []).map((t) => t.id);
+
+  if (templateIds.length > 0) {
+    const { error: anchorsError } = await admin
+      .from("template_anchors")
+      .delete()
+      .in("template_id", templateIds);
+    if (anchorsError) return { error: anchorsError.message };
+  }
+
+  const steps = [
+    admin.from("tickets").delete().eq("event_id", eventId),
+    admin.from("cash_handovers").delete().eq("event_id", eventId),
+    admin.from("form_fields").delete().eq("event_id", eventId),
+    admin.from("templates").delete().eq("event_id", eventId),
+  ];
+  const results = await Promise.all(steps);
+  const failed = results.find((r) => r.error);
+  if (failed?.error) return { error: failed.error.message };
+
+  const { data: event, error: fetchError } = await admin
+    .from("events")
+    .select("account_id")
+    .eq("id", eventId)
+    .maybeSingle();
+  if (fetchError) return { error: fetchError.message };
+
+  const { error } = await admin.from("events").delete().eq("id", eventId);
+  if (error) return { error: error.message };
+
+  if (event) revalidatePath(`/admin/accounts/${event.account_id}`);
+  revalidatePath("/admin");
+  return { error: null };
+}
+
 export async function reopenEvent(eventId: string) {
   await requireSuperAdmin();
   const supabase = await createClient();

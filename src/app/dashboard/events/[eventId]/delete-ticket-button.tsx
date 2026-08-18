@@ -3,14 +3,16 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
-import { deleteTemplate } from "./actions";
+import { deleteTicket } from "./issue/actions";
 
-export function DeleteTemplateButton({
+export function DeleteTicketButton({
   eventId,
-  templateId,
+  ticketId,
+  participantName,
 }: {
   eventId: string;
-  templateId: string;
+  ticketId: string;
+  participantName: string;
 }) {
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
@@ -18,14 +20,12 @@ export function DeleteTemplateButton({
   return (
     <button
       className="text-zinc-400 hover:text-red-600 disabled:opacity-50"
-      title="Delete template"
+      title="Delete ticket"
       disabled={deleting}
-      onClick={async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (!confirm("Delete this template? This cannot be undone.")) return;
+      onClick={async () => {
+        if (!confirm(`Delete the ticket for "${participantName}" (${ticketId})? This cannot be undone.`)) return;
         setDeleting(true);
-        await deleteTemplate(eventId, templateId);
+        await deleteTicket(eventId, ticketId);
         router.refresh();
       }}
     >
