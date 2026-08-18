@@ -168,6 +168,11 @@ export async function deleteEvent(eventId: string): Promise<{ error: string | nu
     if (anchorsError) return { error: anchorsError.message };
   }
 
+  // check_ins references tickets, so it must go first in case there's no
+  // DB-level cascade on that foreign key.
+  const { error: checkInsError } = await admin.from("check_ins").delete().eq("event_id", eventId);
+  if (checkInsError) return { error: checkInsError.message };
+
   const steps = [
     admin.from("tickets").delete().eq("event_id", eventId),
     admin.from("cash_handovers").delete().eq("event_id", eventId),
