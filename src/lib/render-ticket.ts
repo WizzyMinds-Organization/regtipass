@@ -25,6 +25,21 @@ function ensureFontRegistered() {
   fontRegistered = true;
 }
 
+// One client per warm Lambda instance instead of one per request: each
+// render does 3 sequential Supabase calls (ticket, template+anchors,
+// storage), and createAdminClient() per call meant paying a fresh TLS
+// handshake on every single one of them even within the same warm
+// container, since Node's fetch client had nothing to keep a connection
+// alive across. A lazily-created singleton lets the underlying HTTP agent
+// reuse connections across calls in the same invocation and across
+// invocations on the same warm instance, without touching env vars at
+// module-import time.
+let cachedAdminClient: ReturnType<typeof createAdminClient> | null = null;
+function getAdminClient() {
+  if (!cachedAdminClient) cachedAdminClient = createAdminClient();
+  return cachedAdminClient;
+}
+
 // Template artwork rarely changes (image_path is a fresh UUID per upload,
 // so a re-upload just gets a new cache entry) but was being re-downloaded
 // from Storage on every single render — the dominant cost when a booth
@@ -55,7 +70,7 @@ async function getTemplateBackground(
 
 export async function warmTemplateBackground(imagePath: string): Promise<void> {
   if (backgroundCache.has(imagePath)) return;
-  await getTemplateBackground(createAdminClient(), imagePath);
+  await getTemplateBackground(getAdminClient(), imagePath);
 }
 
 function canvasAlign(align: string): CanvasTextAlign {
@@ -72,18 +87,17 @@ export async function renderTicketPng(ticketId: string): Promise<Buffer | null> 
   // make every unauthenticated view 404. The unguessable ticket ID
   // (TICKET_ID_PATTERN, ~2.9x10^14 combinations) is the access boundary
   // here, not a session.
-  const supabase = createAdminClient();
-
-  const { data: ticket } = await supabase.from("tickets").select("*").eq("id", ticketId).maybeSingle();
+  const adminClient = getAdminClient();
+  const { data: ticket } = await adminClient.from("tickets").select("*").eq("id", ticketId).maybeSingle();
   if (!ticket) return null;
 
   const [{ data: template }, { data: anchors }] = await Promise.all([
-    supabase.from("templates").select("*").eq("id", ticket.template_id).maybeSingle(),
-    supabase.from("template_anchors").select("*").eq("template_id", ticket.template_id).eq("visible", true),
+    adminClient.from("templates").select("*").eq("id", ticket.template_id).maybeSingle(),
+    adminClient.from("template_anchors").select("*").eq("template_id", ticket.template_id).eq("visible", true),
   ]);
   if (!template) return null;
 
-  const backgroundBuffer = await getTemplateBackground(supabase, template.image_path);
+  const backgroundBuffer = await getTemplateBackground(adminClient, template.image_path);
   if (!backgroundBuffer) return null;
 
   const participantData = ticket.participant_data as Record<string, string>;
