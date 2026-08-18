@@ -34,7 +34,11 @@ export async function middleware(request: NextRequest) {
     path === "/reset-password" ||
     path === "/sw.js" ||
     path.startsWith("/_next") ||
-    path.startsWith("/api/keepalive");
+    path.startsWith("/api/keepalive") ||
+    // A ticket's own ID is its access boundary (see renderTicketPng), not a
+    // session — the route needs to work for a guest with no account who
+    // just scanned a QR code or opened a shared link.
+    /^\/api\/tickets\/[^/]+\/render$/.test(path);
 
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();

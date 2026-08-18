@@ -1,11 +1,29 @@
 import "server-only";
 import sharp from "sharp";
 import QRCode from "qrcode";
+import { createCanvas, GlobalFonts } from "@napi-rs/canvas";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { TemplateAnchor } from "@/lib/supabase/types";
 import { TICKET_FONT_BASE64 } from "@/lib/fonts/ticket-font";
 
 const TICKET_FONT_FAMILY = "TicketFont";
+
+// sharp's SVG text rendering goes through librsvg -> Pango -> fontconfig,
+// which needs a working fonts.conf on disk to lay out ANY text at all —
+// including an embedded @font-face, since font matching still routes
+// through that same broken chain. Vercel's Node runtime has no fontconfig
+// config file ("Fontconfig error: Cannot load default config file"), so
+// every <text> node rendered blank while the QR (a plain raster composite,
+// no text layout involved) rendered fine. @napi-rs/canvas is a
+// self-contained Rust canvas engine with its own font loader — no
+// fontconfig, no Pango, nothing OS-dependent — so text is drawn on a
+// canvas layer and composited as a plain PNG instead of going through SVG.
+let fontRegistered = false;
+function ensureFontRegistered() {
+  if (fontRegistered) return;
+  GlobalFonts.register(Buffer.from(TICKET_FONT_BASE64, "base64"), TICKET_FONT_FAMILY);
+  fontRegistered = true;
+}
 
 // Template artwork rarely changes (image_path is a fresh UUID per upload,
 // so a re-upload just gets a new cache entry) but was being re-downloaded
@@ -40,19 +58,10 @@ export async function warmTemplateBackground(imagePath: string): Promise<void> {
   await getTemplateBackground(createAdminClient(), imagePath);
 }
 
-function escapeXml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;");
-}
-
-function textAnchorFor(align: string): string {
-  if (align === "center") return "middle";
-  if (align === "right") return "end";
-  return "start";
+function canvasAlign(align: string): CanvasTextAlign {
+  if (align === "center") return "center";
+  if (align === "right") return "right";
+  return "left";
 }
 
 export async function renderTicketPng(ticketId: string): Promise<Buffer | null> {
@@ -80,7 +89,7 @@ export async function renderTicketPng(ticketId: string): Promise<Buffer | null> 
   const participantData = ticket.participant_data as Record<string, string>;
 
   const composites: Array<{ input: Buffer; left?: number; top?: number }> = [];
-  const textNodes: string[] = [];
+  const textAnchors: TemplateAnchor[] = [];
 
   for (const anchor of (anchors ?? []) as TemplateAnchor[]) {
     if (anchor.kind === "qr") {
@@ -95,37 +104,39 @@ export async function renderTicketPng(ticketId: string): Promise<Buffer | null> 
       composites.push({ input: qrResized, left: Math.round(anchor.x), top: Math.round(anchor.y) });
       continue;
     }
-
-    let text = "";
-    if (anchor.kind === "ticket_id") {
-      text = ticket.id;
-    } else if (anchor.kind === "field" && anchor.field_key) {
-      text = participantData?.[anchor.field_key] ?? "";
-    }
-    if (!text) continue;
-
-    const anchorX =
-      anchor.align === "center"
-        ? anchor.x + anchor.width / 2
-        : anchor.align === "right"
-        ? anchor.x + anchor.width
-        : anchor.x;
-
-    textNodes.push(
-      `<text x="${anchorX}" y="${anchor.y + anchor.font_size}" font-family="${TICKET_FONT_FAMILY}, sans-serif" ` +
-        `font-size="${anchor.font_size}" fill="${escapeXml(anchor.color)}" ` +
-        `text-anchor="${textAnchorFor(anchor.align)}">${escapeXml(text)}</text>`
-    );
+    textAnchors.push(anchor);
   }
 
-  // sharp's SVG rasterizer has no system fonts to fall back on in a
-  // serverless runtime, so "sans-serif" alone resolves to nothing and text
-  // renders blank. Embedding the font directly in the SVG guarantees it's
-  // always available regardless of what's installed on the host.
-  const fontFace = `<defs><style>@font-face { font-family: '${TICKET_FONT_FAMILY}'; src: url(data:font/ttf;base64,${TICKET_FONT_BASE64}) format('truetype'); }</style></defs>`;
-  const overlaySvg = `<svg width="${template.image_width}" height="${template.image_height}" xmlns="http://www.w3.org/2000/svg">${fontFace}${textNodes.join("")}</svg>`;
+  if (textAnchors.length > 0) {
+    ensureFontRegistered();
+    const canvas = createCanvas(template.image_width, template.image_height);
+    const ctx = canvas.getContext("2d");
 
-  composites.push({ input: Buffer.from(overlaySvg) });
+    for (const anchor of textAnchors) {
+      let text = "";
+      if (anchor.kind === "ticket_id") {
+        text = ticket.id;
+      } else if (anchor.kind === "field" && anchor.field_key) {
+        text = participantData?.[anchor.field_key] ?? "";
+      }
+      if (!text) continue;
+
+      const anchorX =
+        anchor.align === "center"
+          ? anchor.x + anchor.width / 2
+          : anchor.align === "right"
+          ? anchor.x + anchor.width
+          : anchor.x;
+
+      ctx.font = `${anchor.font_size}px "${TICKET_FONT_FAMILY}"`;
+      ctx.fillStyle = anchor.color;
+      ctx.textAlign = canvasAlign(anchor.align);
+      ctx.textBaseline = "alphabetic";
+      ctx.fillText(text, anchorX, anchor.y + anchor.font_size);
+    }
+
+    composites.push({ input: canvas.toBuffer("image/png") });
+  }
 
   const output = await sharp(backgroundBuffer)
     .resize(template.image_width, template.image_height)
