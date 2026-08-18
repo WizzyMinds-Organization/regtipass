@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { FormField, Template } from "@/lib/supabase/types";
-import { issueTicket } from "./actions";
+import { issueTicket, prefetchTemplateBackground } from "./actions";
 
 export function IssueForm({
   eventId,
@@ -23,6 +23,13 @@ export function IssueForm({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [issuedTicketId, setIssuedTicketId] = useState<string | null>(null);
+
+  // Warm the artwork cache as soon as a template is selected — including on
+  // first load — so it's already downloaded by the time a ticket exists and
+  // the preview needs to render, instead of paying that cost after submit.
+  useEffect(() => {
+    if (templateId) void prefetchTemplateBackground(eventId, templateId);
+  }, [eventId, templateId]);
 
   function onTemplateChange(id: string) {
     setTemplateId(id);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { FormField } from "@/lib/supabase/types";
 import { CheckinScanner } from "./scanner";
 import { CheckinGuestList } from "./checkin-guest-list";
 
@@ -12,7 +13,7 @@ const TABS = [
 
 type TabKey = (typeof TABS)[number]["key"];
 
-export function CheckinTabs({ eventId }: { eventId: string }) {
+export function CheckinTabs({ eventId, fields }: { eventId: string; fields: FormField[] }) {
   const [tab, setTab] = useState<TabKey>("scan");
 
   return (
@@ -31,7 +32,7 @@ export function CheckinTabs({ eventId }: { eventId: string }) {
         ))}
       </div>
 
-      {tab === "scan" && <CheckinScanner eventId={eventId} />}
+      {tab === "scan" && <CheckinScanner eventId={eventId} fields={fields} />}
       {tab === "checked_in" && <CheckinGuestList eventId={eventId} filter="checked_in" />}
       {tab === "pending" && <CheckinGuestList eventId={eventId} filter="pending" />}
     </div>

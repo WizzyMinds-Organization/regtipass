@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getEventContext } from "@/lib/event-context";
+import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { CheckinTabs } from "./checkin-tabs";
 
@@ -21,10 +22,17 @@ export default async function CheckinPage({
     );
   }
 
+  const supabase = await createClient();
+  const { data: fields } = await supabase
+    .from("form_fields")
+    .select("*")
+    .eq("event_id", eventId)
+    .order("sort_order");
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title="Check-in" compact />
-      <CheckinTabs eventId={eventId} />
+      <CheckinTabs eventId={eventId} fields={fields ?? []} />
     </div>
   );
 }

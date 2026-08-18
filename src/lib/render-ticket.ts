@@ -1,8 +1,44 @@
 import "server-only";
 import sharp from "sharp";
 import QRCode from "qrcode";
-import { createClient } from "@/lib/supabase/server";
-import type { FormField, TemplateAnchor } from "@/lib/supabase/types";
+import { createAdminClient } from "@/lib/supabase/admin";
+import type { TemplateAnchor } from "@/lib/supabase/types";
+import { TICKET_FONT_BASE64 } from "@/lib/fonts/ticket-font";
+
+const TICKET_FONT_FAMILY = "TicketFont";
+
+// Template artwork rarely changes (image_path is a fresh UUID per upload,
+// so a re-upload just gets a new cache entry) but was being re-downloaded
+// from Storage on every single render — the dominant cost when a booth
+// issues many tickets back-to-back off the same template. Cached per warm
+// server instance and can be pre-warmed via warmTemplateBackground() before
+// the ticket that needs it even exists yet.
+const MAX_CACHE_ENTRIES = 30;
+const backgroundCache = new Map<string, Buffer>();
+
+async function getTemplateBackground(
+  supabase: ReturnType<typeof createAdminClient>,
+  imagePath: string
+): Promise<Buffer | null> {
+  const cached = backgroundCache.get(imagePath);
+  if (cached) return cached;
+
+  const { data: fileData } = await supabase.storage.from("templates").download(imagePath);
+  if (!fileData) return null;
+  const buffer = Buffer.from(await fileData.arrayBuffer());
+
+  if (backgroundCache.size >= MAX_CACHE_ENTRIES) {
+    const oldestKey = backgroundCache.keys().next().value;
+    if (oldestKey) backgroundCache.delete(oldestKey);
+  }
+  backgroundCache.set(imagePath, buffer);
+  return buffer;
+}
+
+export async function warmTemplateBackground(imagePath: string): Promise<void> {
+  if (backgroundCache.has(imagePath)) return;
+  await getTemplateBackground(createAdminClient(), imagePath);
+}
 
 function escapeXml(value: string): string {
   return value
@@ -20,28 +56,27 @@ function textAnchorFor(align: string): string {
 }
 
 export async function renderTicketPng(ticketId: string): Promise<Buffer | null> {
-  const supabase = await createClient();
+  // Admin client, deliberately: /api/tickets/[ticketId]/render has no auth
+  // check by design — a ticket holder without a staff account still needs
+  // to view/download/share their own ticket by ID. RLS requires account
+  // membership on tickets/templates/template_anchors, which would otherwise
+  // make every unauthenticated view 404. The unguessable ticket ID
+  // (TICKET_ID_PATTERN, ~2.9x10^14 combinations) is the access boundary
+  // here, not a session.
+  const supabase = createAdminClient();
 
   const { data: ticket } = await supabase.from("tickets").select("*").eq("id", ticketId).maybeSingle();
   if (!ticket) return null;
 
-  const [{ data: template }, { data: fields }] = await Promise.all([
+  const [{ data: template }, { data: anchors }] = await Promise.all([
     supabase.from("templates").select("*").eq("id", ticket.template_id).maybeSingle(),
-    supabase.from("form_fields").select("*").eq("event_id", ticket.event_id),
+    supabase.from("template_anchors").select("*").eq("template_id", ticket.template_id).eq("visible", true),
   ]);
   if (!template) return null;
 
-  const { data: anchors } = await supabase
-    .from("template_anchors")
-    .select("*")
-    .eq("template_id", template.id)
-    .eq("visible", true);
+  const backgroundBuffer = await getTemplateBackground(supabase, template.image_path);
+  if (!backgroundBuffer) return null;
 
-  const { data: fileData } = await supabase.storage.from("templates").download(template.image_path);
-  if (!fileData) return null;
-  const backgroundBuffer = Buffer.from(await fileData.arrayBuffer());
-
-  const fieldByKey = new Map<string, FormField>((fields ?? []).map((f) => [f.key, f]));
   const participantData = ticket.participant_data as Record<string, string>;
 
   const composites: Array<{ input: Buffer; left?: number; top?: number }> = [];
@@ -77,13 +112,18 @@ export async function renderTicketPng(ticketId: string): Promise<Buffer | null> 
         : anchor.x;
 
     textNodes.push(
-      `<text x="${anchorX}" y="${anchor.y + anchor.font_size}" font-family="sans-serif" ` +
+      `<text x="${anchorX}" y="${anchor.y + anchor.font_size}" font-family="${TICKET_FONT_FAMILY}, sans-serif" ` +
         `font-size="${anchor.font_size}" fill="${escapeXml(anchor.color)}" ` +
         `text-anchor="${textAnchorFor(anchor.align)}">${escapeXml(text)}</text>`
     );
   }
 
-  const overlaySvg = `<svg width="${template.image_width}" height="${template.image_height}" xmlns="http://www.w3.org/2000/svg">${textNodes.join("")}</svg>`;
+  // sharp's SVG rasterizer has no system fonts to fall back on in a
+  // serverless runtime, so "sans-serif" alone resolves to nothing and text
+  // renders blank. Embedding the font directly in the SVG guarantees it's
+  // always available regardless of what's installed on the host.
+  const fontFace = `<defs><style>@font-face { font-family: '${TICKET_FONT_FAMILY}'; src: url(data:font/ttf;base64,${TICKET_FONT_BASE64}) format('truetype'); }</style></defs>`;
+  const overlaySvg = `<svg width="${template.image_width}" height="${template.image_height}" xmlns="http://www.w3.org/2000/svg">${fontFace}${textNodes.join("")}</svg>`;
 
   composites.push({ input: Buffer.from(overlaySvg) });
 

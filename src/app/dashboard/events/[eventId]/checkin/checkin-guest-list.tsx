@@ -31,7 +31,6 @@ export function CheckinGuestList({
   const guests = (data?.guests ?? []).filter((g) =>
     filter === "checked_in" ? g.status === "checked_in" : g.status !== "checked_in"
   );
-  const hasTicketId = guests.some((g) => g.id);
   const count = filter === "checked_in" ? data?.checkedIn ?? 0 : (data ? data.issued - data.checkedIn : 0);
   const emptyLabel = !data || data.issued === 0
     ? "No tickets issued yet."
@@ -51,22 +50,18 @@ export function CheckinGuestList({
         <table className="w-full min-w-[320px] text-sm">
           <thead className="bg-zinc-50 text-left text-zinc-500">
             <tr>
-              {hasTicketId && <th className="px-5 py-2.5 font-medium">Ticket ID</th>}
               <th className="px-5 py-2.5 font-medium">Participant</th>
             </tr>
           </thead>
           <tbody>
             {guests.map((g, i) => (
               <tr key={g.id ?? i} className="border-t border-zinc-100">
-                {hasTicketId && <td className="px-5 py-2.5 font-mono text-xs text-zinc-500">{g.id}</td>}
                 <td className="px-5 py-2.5 text-zinc-900">{g.name}</td>
               </tr>
             ))}
             {data && guests.length === 0 && (
               <tr>
-                <td colSpan={hasTicketId ? 2 : 1} className="px-5 py-10 text-center text-zinc-400">
-                  {emptyLabel}
-                </td>
+                <td className="px-5 py-10 text-center text-zinc-400">{emptyLabel}</td>
               </tr>
             )}
           </tbody>

@@ -5,6 +5,28 @@ import { createClient } from "@/lib/supabase/server";
 import { getEventContext } from "@/lib/event-context";
 import { getCurrentUser } from "@/lib/auth";
 import { generateTicketId } from "@/lib/slug";
+import { warmTemplateBackground } from "@/lib/render-ticket";
+
+// Called as soon as the issue form loads / the template selection changes —
+// well before the staff member finishes filling the form and submits — so
+// the artwork is already downloaded and cached by the time a ticket exists
+// and its preview needs to render. Fire-and-forget from the client; a
+// failure here just means the first render pays the normal download cost.
+export async function prefetchTemplateBackground(eventId: string, templateId: string): Promise<void> {
+  const ctx = await getEventContext(eventId);
+  if (!ctx || !ctx.canManageParticipants) return;
+
+  const supabase = await createClient();
+  const { data: template } = await supabase
+    .from("templates")
+    .select("image_path")
+    .eq("id", templateId)
+    .eq("event_id", eventId)
+    .maybeSingle();
+  if (!template) return;
+
+  await warmTemplateBackground(template.image_path);
+}
 
 export async function issueTicket(
   eventId: string,
