@@ -173,8 +173,13 @@ export async function deleteEvent(eventId: string): Promise<{ error: string | nu
   const { error: checkInsError } = await admin.from("check_ins").delete().eq("event_id", eventId);
   if (checkInsError) return { error: checkInsError.message };
 
+  // tickets.template_id references templates with no ON DELETE CASCADE, so
+  // tickets must be gone before templates can go — these can't run in the
+  // same Promise.all or the delete order races.
+  const { error: ticketsError } = await admin.from("tickets").delete().eq("event_id", eventId);
+  if (ticketsError) return { error: ticketsError.message };
+
   const steps = [
-    admin.from("tickets").delete().eq("event_id", eventId),
     admin.from("cash_handovers").delete().eq("event_id", eventId),
     admin.from("form_fields").delete().eq("event_id", eventId),
     admin.from("templates").delete().eq("event_id", eventId),
