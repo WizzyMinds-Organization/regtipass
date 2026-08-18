@@ -208,9 +208,27 @@ export function TemplateEditor({
   const selected = anchors.find((a) => a.id === selectedId) ?? null;
 
   function handleAddAnchor(kind: "qr" | "ticket_id") {
-    const defaults: Record<typeof kind, { width: number; height: number; font_size: number }> = {
-      qr: { width: 150, height: 150, font_size: 16 },
-      ticket_id: { width: 200, height: 24, font_size: 14 },
+    // Sized relative to the artwork (not a fixed pixel value) so the QR
+    // reads at a scannable size on both small and large templates, and
+    // placed away from the top-left corner so it doesn't land on top of
+    // whatever's already there — typically a title or the first field.
+    const qrSize = Math.round(Math.min(template.image_width, template.image_height) * 0.28);
+    const margin = Math.round(template.image_width * 0.05);
+    const defaults: Record<typeof kind, { width: number; height: number; font_size: number; x: number; y: number }> = {
+      qr: {
+        width: qrSize,
+        height: qrSize,
+        font_size: 16,
+        x: Math.max(margin, template.image_width - qrSize - margin),
+        y: Math.max(margin, Math.round((template.image_height - qrSize) / 2)),
+      },
+      ticket_id: {
+        width: 200,
+        height: 24,
+        font_size: 14,
+        x: margin,
+        y: Math.max(margin, template.image_height - 44),
+      },
     };
     const id = `draft-${crypto.randomUUID()}`;
     const draft: TemplateAnchor = {
@@ -218,8 +236,6 @@ export function TemplateEditor({
       template_id: template.id,
       kind,
       field_key: null,
-      x: 20,
-      y: 20,
       ...defaults[kind],
       font: "",
       align: "left",
